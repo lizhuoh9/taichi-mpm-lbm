@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from .coupling import LBMMpmCoupler
     from .lbm3d import LBMSolver3D
     from .mpm3d import MPMSolver3D
+    from .output import SimulationOutputWriter
     from .simulation import FSISimulation
 
 __all__ = [
@@ -34,6 +35,7 @@ __all__ = [
     "MPMSolver3D",
     "OutputConfig",
     "SimulationConfig",
+    "SimulationOutputWriter",
 ]
 
 
@@ -58,4 +60,9 @@ def __getattr__(name: str):
 
         globals()[name] = FSISimulation
         return FSISimulation
+    if name == "SimulationOutputWriter":
+        from .output import SimulationOutputWriter
+
+        globals()[name] = SimulationOutputWriter
+        return SimulationOutputWriter
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

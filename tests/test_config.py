@@ -2,7 +2,14 @@ from pathlib import Path
 
 import pytest
 
-from fsi.config import BoundaryConfig, CouplingConfig, LBMConfig, MPMConfig, SimulationConfig
+from fsi.config import (
+    BoundaryConfig,
+    CouplingConfig,
+    LBMConfig,
+    MPMConfig,
+    OutputConfig,
+    SimulationConfig,
+)
 from fsi.simulation import FSISimulation
 
 
@@ -48,6 +55,18 @@ def test_invalid_mpm_boundary_damping_fails():
 
 def test_invalid_coupling_gamma_fails():
     cfg = CouplingConfig(gamma=-1.0)
+    with pytest.raises(ValueError):
+        cfg.validate()
+
+
+def test_invalid_output_interval_fails():
+    cfg = OutputConfig(output_interval=0)
+    with pytest.raises(ValueError):
+        cfg.validate()
+
+
+def test_invalid_output_format_fails():
+    cfg = OutputConfig(output_format="bad")
     with pytest.raises(ValueError):
         cfg.validate()
 

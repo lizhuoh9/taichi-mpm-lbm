@@ -8,7 +8,7 @@ A 3D two-way fluid-solid coupling simulator using:
 
 ## Current status
 
-Step 6: coupled examples and validation tests.
+Step 7: NPZ/VTK output snapshots.
 
 Implemented:
 
@@ -19,11 +19,13 @@ Implemented:
 - explicit penalty-based LBM-MPM two-way coupling
 - top-level coupled simulation runner
 - lightweight coupled example and validation tests
+- NPZ/VTK simulation output snapshots
 
 Not implemented yet:
 
 - high-fidelity validation benchmarks
-- visualization/output pipeline
+- advanced visualization/rendering workflow
+- improved coupling stability and boundary handling
 
 ## External references
 
@@ -44,6 +46,7 @@ python examples/lbm_standalone.py
 python examples/lbm_local_force.py
 python examples/mpm_standalone_cube.py
 python examples/coupled_penalty_smoke.py
+python examples/coupled_output_snapshot.py
 ```
 
 ## Roadmap
@@ -57,6 +60,6 @@ python examples/coupled_penalty_smoke.py
 
 ## Next milestones
 
-- Add NPZ/VTK output snapshots.
 - Add benchmark-style validation cases.
 - Improve coupling stability and boundary handling.
+- Add richer visualization/post-processing tools.

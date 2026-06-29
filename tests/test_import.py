@@ -9,3 +9,4 @@ def test_import_fsi_package():
     assert hasattr(fsi, "MPMSolver3D")
     assert hasattr(fsi, "LBMMpmCoupler")
     assert hasattr(fsi, "FSISimulation")
+    assert hasattr(fsi, "SimulationOutputWriter")

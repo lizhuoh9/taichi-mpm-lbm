@@ -6,6 +6,7 @@ from .config import SimulationConfig
 from .coupling import LBMMpmCoupler
 from .lbm3d import LBMSolver3D
 from .mpm3d import MPMSolver3D
+from .output import SimulationOutputWriter
 
 
 class FSISimulation:
@@ -18,6 +19,7 @@ class FSISimulation:
         self.lbm = LBMSolver3D(config.lbm)
         self.mpm = MPMSolver3D(config.mpm)
         self.coupler = LBMMpmCoupler(config.coupling, self.lbm, self.mpm)
+        self.output_writer = SimulationOutputWriter(config.output)
 
         self.step_index = 0
         self.time = 0.0
@@ -86,16 +88,31 @@ class FSISimulation:
         self.time += self.config.lbm_dt
         return self.diagnostics()
 
-    def run(self, steps: int | None = None) -> list[dict[str, object]]:
+    def run(
+        self,
+        steps: int | None = None,
+        write_output: bool = False,
+        write_initial: bool = False,
+    ) -> list[dict[str, object]]:
         self._validate_initialized()
         count = self.config.num_steps if steps is None else int(steps)
         if count <= 0:
             raise ValueError("steps must be positive.")
 
         history = []
+        if write_output and write_initial:
+            self.write_snapshot()
+
         for _ in range(count):
-            history.append(self.step())
+            diag = self.step()
+            history.append(diag)
+            if write_output and self.output_writer.should_write(self.step_index):
+                self.write_snapshot()
         return history
+
+    def write_snapshot(self):
+        self._validate_initialized()
+        return self.output_writer.write_snapshot(self)
 
     def diagnostics(self) -> dict[str, object]:
         self._validate_initialized()
