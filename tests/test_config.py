@@ -3,7 +3,6 @@ from pathlib import Path
 import pytest
 
 from fsi.config import BoundaryConfig, CouplingConfig, LBMConfig, MPMConfig, SimulationConfig
-from fsi.coupling import LBMMpmCoupler
 from fsi.simulation import FSISimulation
 
 
@@ -70,11 +69,8 @@ def test_invalid_boundary_velocity_fails():
 
 
 def test_remaining_placeholder_methods_raise_not_implemented():
-    coupler = LBMMpmCoupler(CouplingConfig())
     simulation = FSISimulation(SimulationConfig())
 
-    with pytest.raises(NotImplementedError):
-        coupler.step(1.0)
     with pytest.raises(NotImplementedError):
         simulation.run()
 

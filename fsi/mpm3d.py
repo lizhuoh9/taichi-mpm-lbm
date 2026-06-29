@@ -338,6 +338,10 @@ class MPMSolver3D:
         count = self.particle_count()
         return self.v.to_numpy()[:count].copy()
 
+    def particle_forces_numpy(self) -> np.ndarray:
+        count = self.particle_count()
+        return self.particle_force.to_numpy()[:count].copy()
+
     def deformation_gradients_numpy(self) -> np.ndarray:
         count = self.particle_count()
         return self.F.to_numpy()[:count].copy()
