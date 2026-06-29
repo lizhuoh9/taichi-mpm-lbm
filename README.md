@@ -8,7 +8,7 @@ A 3D two-way fluid-solid coupling simulator using:
 
 ## Current status
 
-Step 7: NPZ/VTK output snapshots.
+Step 8: benchmark-style validation cases.
 
 Implemented:
 
@@ -20,12 +20,13 @@ Implemented:
 - top-level coupled simulation runner
 - lightweight coupled example and validation tests
 - NPZ/VTK simulation output snapshots
+- benchmark-style validation cases
 
 Not implemented yet:
 
-- high-fidelity validation benchmarks
-- advanced visualization/rendering workflow
 - improved coupling stability and boundary handling
+- advanced visualization/rendering workflow
+- high-fidelity validation against external reference data
 
 ## External references
 
@@ -41,12 +42,14 @@ Third-party source code is stored under `third_party/`.
 ```bash
 python -m pip install -e ".[dev]"
 pytest
+pytest -m "not slow" -q
 python examples/smoke_import.py
 python examples/lbm_standalone.py
 python examples/lbm_local_force.py
 python examples/mpm_standalone_cube.py
 python examples/coupled_penalty_smoke.py
 python examples/coupled_output_snapshot.py
+python examples/validation_benchmark_suite.py
 ```
 
 ## Roadmap
@@ -60,6 +63,6 @@ python examples/coupled_output_snapshot.py
 
 ## Next milestones
 
-- Add benchmark-style validation cases.
 - Improve coupling stability and boundary handling.
 - Add richer visualization/post-processing tools.
+- Add higher-fidelity reference-data validation cases.

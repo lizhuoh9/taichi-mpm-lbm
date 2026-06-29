@@ -23,6 +23,8 @@ if TYPE_CHECKING:
     from .mpm3d import MPMSolver3D
     from .output import SimulationOutputWriter
     from .simulation import FSISimulation
+    from .validation import ValidationMetric, ValidationReport
+    from .validation_cases import run_validation_suite
 
 __all__ = [
     "BoundaryConfig",
@@ -36,6 +38,9 @@ __all__ = [
     "OutputConfig",
     "SimulationConfig",
     "SimulationOutputWriter",
+    "ValidationMetric",
+    "ValidationReport",
+    "run_validation_suite",
 ]
 
 
@@ -65,4 +70,19 @@ def __getattr__(name: str):
 
         globals()[name] = SimulationOutputWriter
         return SimulationOutputWriter
+    if name == "ValidationMetric":
+        from .validation import ValidationMetric
+
+        globals()[name] = ValidationMetric
+        return ValidationMetric
+    if name == "ValidationReport":
+        from .validation import ValidationReport
+
+        globals()[name] = ValidationReport
+        return ValidationReport
+    if name == "run_validation_suite":
+        from .validation_cases import run_validation_suite
+
+        globals()[name] = run_validation_suite
+        return run_validation_suite
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

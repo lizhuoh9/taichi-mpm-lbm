@@ -157,6 +157,42 @@ def test_output_format_vtk_smoke(tmp_path):
     assert {path.suffix for path in paths} == {".vti", ".vtu"}
 
 
+def test_vtk_output_respects_field_flags(tmp_path):
+    output = OutputConfig(
+        output_dir=tmp_path,
+        output_interval=1,
+        output_format="vtk",
+        write_lbm_fields=False,
+        write_mpm_particles=False,
+        write_coupling_fields=True,
+    )
+    sim = _initialized_simulation(output)
+
+    paths = sim.write_snapshot()
+
+    assert len(paths) == 1
+    assert paths[0].exists()
+    assert paths[0].name.startswith("fluid_")
+    assert paths[0].suffix == ".vti"
+
+
+def test_vtk_output_returns_no_files_when_all_groups_disabled(tmp_path):
+    output = OutputConfig(
+        output_dir=tmp_path,
+        output_interval=1,
+        output_format="vtk",
+        write_lbm_fields=False,
+        write_mpm_particles=False,
+        write_coupling_fields=False,
+    )
+    sim = _initialized_simulation(output)
+
+    paths = sim.write_snapshot()
+
+    assert paths == []
+    assert list(tmp_path.iterdir()) == []
+
+
 def test_output_format_both_writes_npz_and_vtk(tmp_path):
     output = OutputConfig(output_dir=tmp_path, output_interval=1, output_format="both")
     sim = _initialized_simulation(output)

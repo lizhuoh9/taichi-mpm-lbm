@@ -30,6 +30,15 @@ include = ["fsi*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+norecursedirs = [
+  ".git",
+  ".ruff_cache",
+  "outputs",
+  "third_party"
+]
+markers = [
+  "slow: longer-running validation or example-style tests"
+]
 
 [tool.ruff]
 line-length = 100

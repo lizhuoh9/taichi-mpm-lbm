@@ -82,28 +82,41 @@ class SimulationOutputWriter:
         return path
 
     def write_vtk_snapshot(self, sim: FSISimulation) -> list[Path]:
-        self.ensure_output_dir()
         step = sim.step_index
-        fluid_path = self._write_fluid_vtk(sim, step)
-        particle_path = self._write_particles_vtk(sim, step)
-        return [fluid_path, particle_path]
+        paths: list[Path] = []
+        if self.config.write_lbm_fields or self.config.write_coupling_fields:
+            paths.append(self._write_fluid_vtk(sim, step))
+        if self.config.write_mpm_particles:
+            paths.append(self._write_particles_vtk(sim, step))
+        return paths
 
     def _write_fluid_vtk(self, sim: FSISimulation, step: int) -> Path:
-        density = np.ascontiguousarray(sim.lbm.density_numpy())
-        velocity = np.ascontiguousarray(sim.lbm.velocity_numpy())
-        force = np.ascontiguousarray(sim.lbm.force_numpy())
-        solid = np.ascontiguousarray(sim.lbm.solid_numpy())
-        coupling_force = np.ascontiguousarray(sim.coupler.coupling_force_numpy())
-        solid_fraction = np.ascontiguousarray(sim.coupler.solid_volume_fraction_numpy())
+        self.ensure_output_dir()
+        cell_data = {}
+        if self.config.write_lbm_fields:
+            density = np.ascontiguousarray(sim.lbm.density_numpy())
+            velocity = np.ascontiguousarray(sim.lbm.velocity_numpy())
+            force = np.ascontiguousarray(sim.lbm.force_numpy())
+            solid = np.ascontiguousarray(sim.lbm.solid_numpy())
+            cell_data.update(
+                {
+                    "rho": density,
+                    "velocity": self._vector_components(velocity),
+                    "force": self._vector_components(force),
+                    "solid": solid,
+                }
+            )
 
-        cell_data = {
-            "rho": density,
-            "velocity": self._vector_components(velocity),
-            "force": self._vector_components(force),
-            "solid": solid,
-            "coupling_force": self._vector_components(coupling_force),
-            "solid_volume_fraction": solid_fraction,
-        }
+        if self.config.write_coupling_fields:
+            coupling_force = np.ascontiguousarray(sim.coupler.coupling_force_numpy())
+            solid_fraction = np.ascontiguousarray(sim.coupler.solid_volume_fraction_numpy())
+            cell_data.update(
+                {
+                    "coupling_force": self._vector_components(coupling_force),
+                    "solid_volume_fraction": solid_fraction,
+                }
+            )
+
         filename = imageToVTK(
             str(self.output_dir / f"fluid_{step:06d}"),
             origin=(0.0, 0.0, 0.0),
@@ -113,6 +126,7 @@ class SimulationOutputWriter:
         return Path(filename)
 
     def _write_particles_vtk(self, sim: FSISimulation, step: int) -> Path:
+        self.ensure_output_dir()
         positions = np.ascontiguousarray(sim.mpm.positions_numpy())
         velocities = np.ascontiguousarray(sim.mpm.velocities_numpy())
         forces = np.ascontiguousarray(sim.mpm.particle_forces_numpy())

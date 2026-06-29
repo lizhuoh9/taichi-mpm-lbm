@@ -10,3 +10,6 @@ def test_import_fsi_package():
     assert hasattr(fsi, "LBMMpmCoupler")
     assert hasattr(fsi, "FSISimulation")
     assert hasattr(fsi, "SimulationOutputWriter")
+    assert hasattr(fsi, "ValidationMetric")
+    assert hasattr(fsi, "ValidationReport")
+    assert hasattr(fsi, "run_validation_suite")
