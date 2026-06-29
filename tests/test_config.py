@@ -4,7 +4,6 @@ import pytest
 
 from fsi.config import BoundaryConfig, CouplingConfig, LBMConfig, MPMConfig, SimulationConfig
 from fsi.coupling import LBMMpmCoupler
-from fsi.mpm3d import MPMSolver3D
 from fsi.simulation import FSISimulation
 
 
@@ -36,6 +35,18 @@ def test_invalid_mpm_poisson_ratio_fails():
         cfg.validate()
 
 
+def test_invalid_mpm_boundary_width_fails():
+    cfg = MPMConfig(boundary_width=0)
+    with pytest.raises(ValueError):
+        cfg.validate()
+
+
+def test_invalid_mpm_boundary_damping_fails():
+    cfg = MPMConfig(boundary_damping=1.5)
+    with pytest.raises(ValueError):
+        cfg.validate()
+
+
 def test_invalid_coupling_gamma_fails():
     cfg = CouplingConfig(gamma=-1.0)
     with pytest.raises(ValueError):
@@ -59,14 +70,9 @@ def test_invalid_boundary_velocity_fails():
 
 
 def test_remaining_placeholder_methods_raise_not_implemented():
-    mpm = MPMSolver3D(MPMConfig())
     coupler = LBMMpmCoupler(CouplingConfig())
     simulation = FSISimulation(SimulationConfig())
 
-    with pytest.raises(NotImplementedError):
-        mpm.initialize_particles_box()
-    with pytest.raises(NotImplementedError):
-        mpm.substep(0.25)
     with pytest.raises(NotImplementedError):
         coupler.step(1.0)
     with pytest.raises(NotImplementedError):

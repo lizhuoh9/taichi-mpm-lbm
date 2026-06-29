@@ -105,6 +105,8 @@ class MPMConfig:
 
     apic: bool = True
     material: Literal["elastic"] = "elastic"
+    boundary_width: int = 3
+    boundary_damping: float = 0.0
 
     def validate(self) -> None:
         if self.nx <= 4 or self.ny <= 4 or self.nz <= 4:
@@ -130,6 +132,10 @@ class MPMConfig:
             raise ValueError("MPM gravity must have 3 components.")
         if self.material not in _MATERIALS:
             raise ValueError(f"Unsupported MPM material: {self.material}.")
+        if self.boundary_width < 1:
+            raise ValueError("boundary_width must be at least 1.")
+        if not (0.0 <= self.boundary_damping <= 1.0):
+            raise ValueError("boundary_damping must be in [0, 1].")
 
 
 @dataclass(frozen=True)

@@ -8,17 +8,17 @@ A 3D two-way fluid-solid coupling simulator using:
 
 ## Current status
 
-Step 3: local per-cell LBM force field.
+Step 4: standalone 3D MLS-MPM solver.
 
 Implemented:
 
 - project skeleton and configuration system
 - dense standalone 3D D3Q19/MRT LBM solver wrapper
 - local per-cell LBM force field
+- dense standalone 3D elastic MLS-MPM solver
 
 Not implemented yet:
 
-- MPM solver
 - LBM-MPM coupling
 
 ## External references
@@ -38,6 +38,7 @@ pytest
 python examples/smoke_import.py
 python examples/lbm_standalone.py
 python examples/lbm_local_force.py
+python examples/mpm_standalone_cube.py
 ```
 
 ## Roadmap
@@ -45,6 +46,6 @@ python examples/lbm_local_force.py
 1. [x] Project skeleton and config system.
 2. [x] Wrap the 3D D3Q19 MRT LBM solver.
 3. [x] Add local LBM force field.
-4. [ ] Implement 3D MLS-MPM.
+4. [x] Implement 3D MLS-MPM.
 5. [ ] Implement LBM-MPM two-way coupling.
 6. [ ] Add coupled examples and validation tests.
