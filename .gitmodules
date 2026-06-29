@@ -1,0 +1,6 @@
+[submodule "third_party/taichi_LBM3D"]
+	path = third_party/taichi_LBM3D
+	url = https://github.com/yjhp1016/taichi_LBM3D.git
+[submodule "third_party/taichi_mpm"]
+	path = third_party/taichi_mpm
+	url = https://github.com/yuanming-hu/taichi_mpm.git

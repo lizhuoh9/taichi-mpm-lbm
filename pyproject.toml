@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fsi-lbm-mpm"
+version = "0.1.0"
+description = "A 3D two-way fluid-solid coupling simulator using LBM and MPM in Taichi."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "FSI LBM-MPM Contributors" }
+]
+dependencies = [
+  "numpy>=1.23",
+  "taichi>=1.0.2",
+  "pyevtk>=1.6.0"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.0",
+  "ruff>=0.5.0"
+]
+
+[tool.setuptools.packages.find]
+include = ["fsi*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+exclude = ["third_party"]

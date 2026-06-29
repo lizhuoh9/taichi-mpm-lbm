@@ -206,6 +206,25 @@ tempCodeRunnerFile.py
 # Ruff stuff:
 .ruff_cache/
 
+# Taichi
+.taichi/
+*.ti_cache/
+
+# Simulation outputs
+output/
+outputs/
+results/
+*.vti
+*.vtk
+*.vtu
+*.pvtu
+*.npz
+*.npy
+
+# IDE
+.vscode/
+.idea/
+
 # PyPI configuration file
 .pypirc
 
