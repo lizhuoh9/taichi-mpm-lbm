@@ -46,6 +46,7 @@ class LBMConfig:
     rho0: float = 1.0
 
     force: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    initial_velocity: tuple[float, float, float] = (0.0, 0.0, 0.0)
 
     x_left: BoundaryConfig = field(default_factory=lambda: BoundaryConfig("velocity"))
     x_right: BoundaryConfig = field(default_factory=lambda: BoundaryConfig("pressure"))
@@ -68,6 +69,8 @@ class LBMConfig:
             raise ValueError(f"LBM rho0 must be positive, got {self.rho0}.")
         if len(self.force) != 3:
             raise ValueError("LBM force must have 3 components.")
+        if len(self.initial_velocity) != 3:
+            raise ValueError("LBM initial_velocity must have 3 components.")
 
         for boundary in (
             self.x_left,

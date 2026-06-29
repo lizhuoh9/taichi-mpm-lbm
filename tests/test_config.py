@@ -4,7 +4,6 @@ import pytest
 
 from fsi.config import BoundaryConfig, CouplingConfig, LBMConfig, MPMConfig, SimulationConfig
 from fsi.coupling import LBMMpmCoupler
-from fsi.lbm3d import LBMSolver3D
 from fsi.mpm3d import MPMSolver3D
 from fsi.simulation import FSISimulation
 
@@ -21,6 +20,12 @@ def test_mpm_dt_property():
 
 def test_invalid_lbm_viscosity_fails():
     cfg = LBMConfig(viscosity=0.0)
+    with pytest.raises(ValueError):
+        cfg.validate()
+
+
+def test_invalid_lbm_initial_velocity_fails():
+    cfg = LBMConfig(initial_velocity=(0.0, 1.0))
     with pytest.raises(ValueError):
         cfg.validate()
 
@@ -53,16 +58,11 @@ def test_invalid_boundary_velocity_fails():
         cfg.validate()
 
 
-def test_placeholder_methods_raise_not_implemented():
-    lbm = LBMSolver3D(LBMConfig())
+def test_remaining_placeholder_methods_raise_not_implemented():
     mpm = MPMSolver3D(MPMConfig())
     coupler = LBMMpmCoupler(CouplingConfig())
     simulation = FSISimulation(SimulationConfig())
 
-    with pytest.raises(NotImplementedError):
-        lbm.initialize()
-    with pytest.raises(NotImplementedError):
-        lbm.step()
     with pytest.raises(NotImplementedError):
         mpm.initialize_particles_box()
     with pytest.raises(NotImplementedError):
