@@ -8,7 +8,7 @@ A 3D two-way fluid-solid coupling simulator using:
 
 ## Current status
 
-Step 5: explicit LBM-MPM two-way coupling MVP.
+Step 6: coupled examples and validation tests.
 
 Implemented:
 
@@ -17,10 +17,13 @@ Implemented:
 - local per-cell LBM force field
 - dense standalone 3D elastic MLS-MPM solver
 - explicit penalty-based LBM-MPM two-way coupling
+- top-level coupled simulation runner
+- lightweight coupled example and validation tests
 
 Not implemented yet:
 
-- coupled examples and validation tests
+- high-fidelity validation benchmarks
+- visualization/output pipeline
 
 ## External references
 
@@ -40,6 +43,7 @@ python examples/smoke_import.py
 python examples/lbm_standalone.py
 python examples/lbm_local_force.py
 python examples/mpm_standalone_cube.py
+python examples/coupled_penalty_smoke.py
 ```
 
 ## Roadmap
@@ -49,4 +53,10 @@ python examples/mpm_standalone_cube.py
 3. [x] Add local LBM force field.
 4. [x] Implement 3D MLS-MPM.
 5. [x] Implement LBM-MPM two-way coupling.
-6. [ ] Add coupled examples and validation tests.
+6. [x] Add coupled examples and validation tests.
+
+## Next milestones
+
+- Add NPZ/VTK output snapshots.
+- Add benchmark-style validation cases.
+- Improve coupling stability and boundary handling.

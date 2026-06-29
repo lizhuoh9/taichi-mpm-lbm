@@ -68,11 +68,10 @@ def test_invalid_boundary_velocity_fails():
         cfg.validate()
 
 
-def test_remaining_placeholder_methods_raise_not_implemented():
+def test_simulation_config_creates_simulation():
     simulation = FSISimulation(SimulationConfig())
 
-    with pytest.raises(NotImplementedError):
-        simulation.run()
+    assert simulation.config.num_steps == 1000
 
 
 def test_library_modules_do_not_call_taichi_init():
