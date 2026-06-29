@@ -123,7 +123,9 @@ class LBMSolver3D:
         self.LR = ti.field(ti.i32, shape=self.q)
         self.S_dig = ti.field(ti.f32, shape=self.q)
 
-        self.ext_f = ti.Vector.field(3, ti.f32, shape=())
+        self.force = ti.Vector.field(3, ti.f32, shape=shape)
+        self.base_force = ti.Vector.field(3, ti.f32, shape=())
+        self.force_value = ti.Vector.field(3, ti.f32, shape=())
         self.rho0_field = ti.field(ti.f32, shape=())
         self.initial_velocity_field = ti.Vector.field(3, ti.f32, shape=())
 
@@ -178,7 +180,7 @@ class LBMSolver3D:
         self.S_dig.from_numpy(self._s_dig_np)
 
     def _set_scalar_fields(self) -> None:
-        self.ext_f[None] = ti.Vector([float(x) for x in self.config.force])
+        self.base_force[None] = ti.Vector([float(x) for x in self.config.force])
         self.rho0_field[None] = float(self.config.rho0)
         self.initial_velocity_field[None] = ti.Vector(
             [float(x) for x in self.config.initial_velocity]
@@ -197,6 +199,7 @@ class LBMSolver3D:
         self.solid.from_numpy(solid)
         self.static_init()
         self.init_fields()
+        self.reset_force()
         self._initialized = True
 
     def _normalize_solid_mask(self, solid_np: np.ndarray) -> np.ndarray:
@@ -271,11 +274,11 @@ class LBMSolver3D:
         return out
 
     @ti.func
-    def guo_force(self, moment, velocity):
+    def guo_force(self, moment, velocity, local_force):
         out = 0.0
         for q in range(19):
-            e_minus_u_dot_f = (self.e_f[q] - velocity).dot(self.ext_f[None])
-            eu_ef = self.e_f[q].dot(velocity) * self.e_f[q].dot(self.ext_f[None])
+            e_minus_u_dot_f = (self.e_f[q] - velocity).dot(local_force)
+            eu_ef = self.e_f[q].dot(velocity) * self.e_f[q].dot(local_force)
             out += self.w[q] * (e_minus_u_dot_f + eu_ef) * self.M[moment, q]
         return out
 
@@ -312,13 +315,14 @@ class LBMSolver3D:
     def collide(self):
         for i, j, k in self.rho:
             if self.solid[i, j, k] == 0:
+                local_force = self.force[i, j, k]
                 for moment in range(19):
                     moment_value = self.multiply_m(i, j, k, moment)
                     meq = self.meq_vec(moment, self.rho[i, j, k], self.v[i, j, k])
                     moment_value -= self.S_dig[moment] * (moment_value - meq)
                     moment_value += (
                         1.0 - 0.5 * self.S_dig[moment]
-                    ) * self.guo_force(moment, self.v[i, j, k])
+                    ) * self.guo_force(moment, self.v[i, j, k], local_force)
                     self.moment[i, j, k, moment] = moment_value
 
                 for q in range(19):
@@ -415,7 +419,7 @@ class LBMSolver3D:
                     self.v[cell] += self.e_f[q] * self.f[cell, q]
 
                 self.v[cell] /= self.rho[cell]
-                self.v[cell] += (self.ext_f[None] * 0.5) / self.rho[cell]
+                self.v[cell] += (self.force[cell] * 0.5) / self.rho[cell]
             else:
                 self.rho[cell] = self.rho0_field[None]
                 self.v[cell] = ti.Vector([0.0, 0.0, 0.0])
@@ -440,6 +444,9 @@ class LBMSolver3D:
     def distribution_numpy(self) -> np.ndarray:
         return self.f.to_numpy()
 
+    def force_numpy(self) -> np.ndarray:
+        return self.force.to_numpy()
+
     def total_mass(self) -> float:
         rho_np = self.density_numpy()
         solid_np = self.solid_numpy()
@@ -448,3 +455,80 @@ class LBMSolver3D:
     def max_velocity_norm(self) -> float:
         velocity_np = self.velocity_numpy()
         return float(np.linalg.norm(velocity_np, axis=-1).max())
+
+    def clear_force(self) -> None:
+        self._clear_force_kernel()
+
+    def reset_force(self) -> None:
+        self._reset_force_kernel()
+
+    def set_uniform_force(self, force: tuple[float, float, float]) -> None:
+        fx, fy, fz = self._validate_force_vector(force, "force")
+        self.force_value[None] = ti.Vector([fx, fy, fz])
+        self._set_uniform_force_kernel()
+
+    def add_uniform_force(self, force: tuple[float, float, float]) -> None:
+        fx, fy, fz = self._validate_force_vector(force, "force")
+        self.force_value[None] = ti.Vector([fx, fy, fz])
+        self._add_uniform_force_kernel()
+
+    def set_force_from_numpy(self, force_np: np.ndarray) -> None:
+        force = self._normalize_force_field(force_np)
+        self.force.from_numpy(force)
+        self.zero_force_on_solid()
+
+    def total_force(self) -> np.ndarray:
+        force_np = self.force_numpy()
+        solid_np = self.solid_numpy()
+        return force_np[solid_np == 0].sum(axis=0)
+
+    @staticmethod
+    def _validate_force_vector(force: tuple[float, float, float], name: str) -> tuple[float, float, float]:
+        arr = np.asarray(force, dtype=np.float32)
+        if arr.shape != (3,):
+            raise ValueError(f"{name} must have 3 components.")
+        return float(arr[0]), float(arr[1]), float(arr[2])
+
+    def _normalize_force_field(self, force_np: np.ndarray) -> np.ndarray:
+        arr = np.asarray(force_np, dtype=np.float32)
+        expected_shape = (self.nx, self.ny, self.nz, 3)
+        if arr.shape != expected_shape:
+            raise ValueError(f"force_np shape must be {expected_shape}, got {arr.shape}.")
+        return np.ascontiguousarray(arr)
+
+    @ti.kernel
+    def _clear_force_kernel(self):
+        for cell in ti.grouped(self.rho):
+            self.force[cell] = ti.Vector([0.0, 0.0, 0.0])
+
+    @ti.kernel
+    def _reset_force_kernel(self):
+        for cell in ti.grouped(self.rho):
+            if self.solid[cell] == 0:
+                self.force[cell] = self.base_force[None]
+            else:
+                self.force[cell] = ti.Vector([0.0, 0.0, 0.0])
+
+    @ti.kernel
+    def _set_uniform_force_kernel(self):
+        value = self.force_value[None]
+        for cell in ti.grouped(self.rho):
+            if self.solid[cell] == 0:
+                self.force[cell] = value
+            else:
+                self.force[cell] = ti.Vector([0.0, 0.0, 0.0])
+
+    @ti.kernel
+    def _add_uniform_force_kernel(self):
+        value = self.force_value[None]
+        for cell in ti.grouped(self.rho):
+            if self.solid[cell] == 0:
+                self.force[cell] += value
+            else:
+                self.force[cell] = ti.Vector([0.0, 0.0, 0.0])
+
+    @ti.kernel
+    def zero_force_on_solid(self):
+        for cell in ti.grouped(self.rho):
+            if self.solid[cell] != 0:
+                self.force[cell] = ti.Vector([0.0, 0.0, 0.0])
