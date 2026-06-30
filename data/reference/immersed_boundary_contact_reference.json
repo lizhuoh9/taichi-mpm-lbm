@@ -1,0 +1,41 @@
+{
+  "case_name": "immersed_boundary_contact_reference",
+  "created_by": "fsi-lbm-mpm Step 12 reference generator",
+  "description": "Small Step 12 immersed-boundary/contact MVP reference.",
+  "metadata": {
+    "source_cases": [
+      "immersed_boundary_drag",
+      "contact_diagnostics"
+    ]
+  },
+  "metrics": {
+    "contact_candidate_count": 1.0,
+    "contact_damped_particle_count": 1.0,
+    "ib_active_cell_count": 19.0,
+    "ib_total_force_norm": 0.00032500000088475645,
+    "ib_total_force_x": -0.00032500000088475645
+  },
+  "schema_version": 1,
+  "tolerances": {
+    "contact_candidate_count": {
+      "abs": 0.0,
+      "rel": 0.0
+    },
+    "contact_damped_particle_count": {
+      "abs": 0.0,
+      "rel": 0.0
+    },
+    "ib_active_cell_count": {
+      "abs": 0.0,
+      "rel": 0.0
+    },
+    "ib_total_force_norm": {
+      "abs": 1e-09,
+      "rel": 0.001
+    },
+    "ib_total_force_x": {
+      "abs": 1e-09,
+      "rel": 0.001
+    }
+  }
+}

@@ -132,8 +132,10 @@ def test_validation_bridge_uses_effective_abs_tolerance_for_relative_pass():
 def test_committed_reference_files_load_and_cover_tolerances():
     reference_dir = default_reference_data_dir()
     paths = sorted(reference_dir.glob("*.json"))
+    names = {path.name for path in paths}
 
     assert len(paths) >= 5
+    assert "immersed_boundary_contact_reference.json" in names
     for path in paths:
         dataset = load_reference_dataset(path)
         assert dataset.schema_version == 1

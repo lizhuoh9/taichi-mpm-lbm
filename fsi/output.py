@@ -74,10 +74,32 @@ class SimulationOutputWriter:
                 {
                     "coupling_force": sim.coupler.coupling_force_numpy(),
                     "solid_volume_fraction": sim.coupler.solid_volume_fraction_numpy(),
+                    "immersed_boundary_force": sim.coupler.immersed_boundary_force_numpy(),
                     "total_particle_coupling_force": sim.coupler.total_particle_coupling_force(),
                     "total_fluid_coupling_force": sim.coupler.total_fluid_coupling_force(),
                     "coupling_particle_valid_weight": sim.coupler.particle_valid_weights_numpy(),
                     "coupling_particle_mask": sim.coupler.particle_coupling_mask_numpy(),
+                    "particle_contact_mask": sim.coupler.particle_contact_mask_numpy(),
+                    "ib_total_force": np.array(
+                        [
+                            coupling_diagnostics["ib_total_force_x"],
+                            coupling_diagnostics["ib_total_force_y"],
+                            coupling_diagnostics["ib_total_force_z"],
+                        ],
+                        dtype=np.float32,
+                    ),
+                    "ib_active_cell_count": np.array(
+                        coupling_diagnostics["ib_active_cell_count"], dtype=np.int32
+                    ),
+                    "ib_clipped_cell_count": np.array(
+                        coupling_diagnostics["ib_clipped_cell_count"], dtype=np.int32
+                    ),
+                    "contact_candidate_count": np.array(
+                        coupling_diagnostics["contact_candidate_count"], dtype=np.int32
+                    ),
+                    "contact_damped_particle_count": np.array(
+                        coupling_diagnostics["contact_damped_particle_count"], dtype=np.int32
+                    ),
                     "coupling_unsupported_particle_count": np.array(
                         coupling_diagnostics["unsupported_particle_count"], dtype=np.int32
                     ),
@@ -122,10 +144,16 @@ class SimulationOutputWriter:
         if self.config.write_coupling_fields:
             coupling_force = np.ascontiguousarray(sim.coupler.coupling_force_numpy())
             solid_fraction = np.ascontiguousarray(sim.coupler.solid_volume_fraction_numpy())
+            immersed_boundary_force = np.ascontiguousarray(
+                sim.coupler.immersed_boundary_force_numpy()
+            )
             cell_data.update(
                 {
                     "coupling_force": self._vector_components(coupling_force),
                     "solid_volume_fraction": solid_fraction,
+                    "immersed_boundary_force": self._vector_components(
+                        immersed_boundary_force
+                    ),
                 }
             )
 
@@ -156,6 +184,8 @@ class SimulationOutputWriter:
             "velocity": self._vector_components(velocities),
             "particle_force": self._vector_components(forces),
         }
+        if self.config.write_coupling_fields:
+            data["contact_mask"] = np.ascontiguousarray(sim.coupler.particle_contact_mask_numpy())
         filename = pointsToVTK(str(self.output_dir / f"particles_{step:06d}"), x, y, z, data=data)
         return Path(filename)
 

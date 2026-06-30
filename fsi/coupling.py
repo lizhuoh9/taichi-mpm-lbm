@@ -26,6 +26,8 @@ class LBMMpmCoupler:
         self._validate_solver_contract()
         self.enabled = bool(config.enabled)
         self.build_solid_volume_fraction = bool(config.build_solid_volume_fraction)
+        self.immersed_boundary_enabled = bool(config.immersed_boundary_enabled)
+        self.contact_enabled = bool(config.contact_enabled)
         self.substeps = int(config.mpm_substeps_per_lbm_step)
 
         self.nx = int(lbm.nx)
@@ -57,6 +59,7 @@ class LBMMpmCoupler:
         shape = (self.nx, self.ny, self.nz)
         self.coupling_force = ti.Vector.field(3, ti.f32, shape=shape)
         self.solid_volume_fraction = ti.field(ti.f32, shape=shape)
+        self.immersed_boundary_force = ti.Vector.field(3, ti.f32, shape=shape)
         self.gamma_field = ti.field(ti.f32, shape=())
         self.dt_ratio_field = ti.field(ti.f32, shape=())
         self.cell_volume_field = ti.field(ti.f32, shape=())
@@ -68,8 +71,22 @@ class LBMMpmCoupler:
         self.gamma_ramp_steps_field = ti.field(ti.i32, shape=())
         self.coupled_step_field = ti.field(ti.i32, shape=())
         self.min_valid_weight_field = ti.field(ti.f32, shape=())
+        self.ib_enabled_field = ti.field(ti.i32, shape=())
+        self.ib_drag_field = ti.field(ti.f32, shape=())
+        self.ib_fraction_threshold_field = ti.field(ti.f32, shape=())
+        self.ib_max_force_field = ti.field(ti.f32, shape=())
+        self.use_ib_max_force_field = ti.field(ti.i32, shape=())
+        self.ib_active_cell_count = ti.field(ti.i32, shape=())
+        self.ib_clipped_cell_count = ti.field(ti.i32, shape=())
+        self.ib_total_force = ti.Vector.field(3, ti.f32, shape=())
+        self.contact_enabled_field = ti.field(ti.i32, shape=())
+        self.contact_velocity_damping_field = ti.field(ti.f32, shape=())
+        self.contact_fraction_threshold_field = ti.field(ti.f32, shape=())
+        self.contact_candidate_count = ti.field(ti.i32, shape=())
+        self.contact_damped_particle_count = ti.field(ti.i32, shape=())
         self.particle_valid_weight = ti.field(ti.f32, shape=self.mpm.max_particles)
         self.particle_coupling_mask = ti.field(ti.i32, shape=self.mpm.max_particles)
+        self.particle_contact_mask = ti.field(ti.i32, shape=self.mpm.max_particles)
         self.unsupported_particle_count = ti.field(ti.i32, shape=())
         self.partial_support_particle_count = ti.field(ti.i32, shape=())
         self.clipped_particle_count = ti.field(ti.i32, shape=())
@@ -94,6 +111,26 @@ class LBMMpmCoupler:
         self.gamma_ramp_steps_field[None] = int(self.config.gamma_ramp_steps)
         self.coupled_step_field[None] = 0
         self.min_valid_weight_field[None] = float(self.config.min_valid_weight)
+        self.ib_enabled_field[None] = 1 if self.immersed_boundary_enabled else 0
+        self.ib_drag_field[None] = float(self.config.immersed_boundary_drag)
+        self.ib_fraction_threshold_field[None] = float(
+            self.config.immersed_boundary_fraction_threshold
+        )
+        self.ib_max_force_field[None] = (
+            0.0
+            if self.config.immersed_boundary_max_force is None
+            else float(self.config.immersed_boundary_max_force)
+        )
+        self.use_ib_max_force_field[None] = (
+            0 if self.config.immersed_boundary_max_force is None else 1
+        )
+        self.contact_enabled_field[None] = 1 if self.contact_enabled else 0
+        self.contact_velocity_damping_field[None] = float(
+            self.config.contact_velocity_damping
+        )
+        self.contact_fraction_threshold_field[None] = float(
+            self.config.contact_fraction_threshold
+        )
 
     def step(self, lbm_dt: float) -> None:
         """Run one explicit coupled LBM step with configured MPM substeps."""
@@ -119,6 +156,8 @@ class LBMMpmCoupler:
                 )
                 self._compute_coupling_forces_kernel()
             self.mpm.substep(dt=mpm_dt)
+            if self.contact_enabled:
+                self._compute_contact_diagnostics_kernel()
 
         if self.enabled and self.build_solid_volume_fraction:
             self._clamp_solid_volume_fraction_kernel()
@@ -126,6 +165,9 @@ class LBMMpmCoupler:
         self.lbm.reset_force()
         if self.enabled:
             self._apply_coupling_force_to_lbm_kernel()
+        if self.immersed_boundary_enabled:
+            self._compute_immersed_boundary_force_kernel()
+            self._apply_immersed_boundary_force_to_lbm_kernel()
         self.lbm.step()
         if self.enabled:
             self.coupled_step_field[None] = int(self.coupled_step_field[None]) + 1
@@ -148,6 +190,10 @@ class LBMMpmCoupler:
         self._compute_coupling_forces_kernel()
         if self.build_solid_volume_fraction:
             self._clamp_solid_volume_fraction_kernel()
+        if self.contact_enabled:
+            self._compute_contact_diagnostics_kernel()
+        if self.immersed_boundary_enabled:
+            self._compute_immersed_boundary_force_kernel()
 
     def clear_coupling_fields(self) -> None:
         self._clear_coupling_fields_kernel()
@@ -162,6 +208,9 @@ class LBMMpmCoupler:
     def solid_volume_fraction_numpy(self) -> np.ndarray:
         return self.solid_volume_fraction.to_numpy()
 
+    def immersed_boundary_force_numpy(self) -> np.ndarray:
+        return self.immersed_boundary_force.to_numpy()
+
     def particle_valid_weights_numpy(self) -> np.ndarray:
         count = self.mpm.particle_count()
         return self.particle_valid_weight.to_numpy()[:count].copy()
@@ -170,6 +219,10 @@ class LBMMpmCoupler:
         count = self.mpm.particle_count()
         return self.particle_coupling_mask.to_numpy()[:count].copy()
 
+    def particle_contact_mask_numpy(self) -> np.ndarray:
+        count = self.mpm.particle_count()
+        return self.particle_contact_mask.to_numpy()[:count].copy()
+
     def total_particle_coupling_force(self) -> np.ndarray:
         return self.mpm.particle_forces_numpy().sum(axis=0)
 
@@ -177,6 +230,19 @@ class LBMMpmCoupler:
         force_np = self.coupling_force_numpy()
         solid_np = self.lbm.solid_numpy()
         return force_np[solid_np == 0].sum(axis=0)
+
+    def immersed_boundary_diagnostics(self) -> dict[str, int | float]:
+        ib_total_force = np.array(self.ib_total_force[None], dtype=np.float64)
+        return {
+            "ib_active_cell_count": int(self.ib_active_cell_count[None]),
+            "ib_clipped_cell_count": int(self.ib_clipped_cell_count[None]),
+            "ib_total_force_x": float(ib_total_force[0]),
+            "ib_total_force_y": float(ib_total_force[1]),
+            "ib_total_force_z": float(ib_total_force[2]),
+            "ib_total_force_norm": float(np.linalg.norm(ib_total_force)),
+            "contact_candidate_count": int(self.contact_candidate_count[None]),
+            "contact_damped_particle_count": int(self.contact_damped_particle_count[None]),
+        }
 
     def effective_gamma(self) -> float:
         gamma = float(self.gamma_field[None])
@@ -201,6 +267,7 @@ class LBMMpmCoupler:
             "min_particle_valid_weight": min_weight,
             "mean_particle_valid_weight": mean_weight,
             "effective_gamma": self.effective_gamma(),
+            **self.immersed_boundary_diagnostics(),
         }
 
     def _validate_initialized(self) -> None:
@@ -213,18 +280,25 @@ class LBMMpmCoupler:
 
     @ti.kernel
     def _clear_coupling_fields_kernel(self):
+        self.ib_active_cell_count[None] = 0
+        self.ib_clipped_cell_count[None] = 0
+        self.ib_total_force[None] = ti.Vector([0.0, 0.0, 0.0])
         for cell in ti.grouped(self.coupling_force):
             self.coupling_force[cell] = ti.Vector([0.0, 0.0, 0.0])
             self.solid_volume_fraction[cell] = 0.0
+            self.immersed_boundary_force[cell] = ti.Vector([0.0, 0.0, 0.0])
 
     @ti.kernel
     def _clear_particle_diagnostics_kernel(self):
         self.unsupported_particle_count[None] = 0
         self.partial_support_particle_count[None] = 0
         self.clipped_particle_count[None] = 0
+        self.contact_candidate_count[None] = 0
+        self.contact_damped_particle_count[None] = 0
         for p in self.particle_valid_weight:
             self.particle_valid_weight[p] = 0.0
             self.particle_coupling_mask[p] = 0
+            self.particle_contact_mask[p] = 0
 
     @ti.func
     def _inside_grid(self, node):
@@ -343,3 +417,80 @@ class LBMMpmCoupler:
                 self.lbm.force[cell] += self.coupling_force[cell]
             else:
                 self.lbm.force[cell] = ti.Vector([0.0, 0.0, 0.0])
+
+    @ti.kernel
+    def _compute_immersed_boundary_force_kernel(self):
+        self.ib_active_cell_count[None] = 0
+        self.ib_clipped_cell_count[None] = 0
+        self.ib_total_force[None] = ti.Vector([0.0, 0.0, 0.0])
+
+        enabled = self.ib_enabled_field[None]
+        drag = self.ib_drag_field[None]
+        threshold = self.ib_fraction_threshold_field[None]
+        use_max_force = self.use_ib_max_force_field[None]
+        max_force = self.ib_max_force_field[None]
+
+        for cell in ti.grouped(self.lbm.rho):
+            force = ti.Vector([0.0, 0.0, 0.0])
+            if enabled != 0 and drag > 0.0 and self.lbm.solid[cell] == 0:
+                phi = self.solid_volume_fraction[cell]
+                if phi > 0.0 and phi >= threshold:
+                    force = -drag * phi * self.lbm.rho[cell] * self.lbm.v[cell]
+                    force_norm = force.norm()
+                    if use_max_force != 0 and force_norm > max_force and force_norm > 0.0:
+                        force = force / force_norm * max_force
+                        ti.atomic_add(self.ib_clipped_cell_count[None], 1)
+
+                    self.immersed_boundary_force[cell] = force
+                    ti.atomic_add(self.ib_active_cell_count[None], 1)
+                    ti.atomic_add(self.ib_total_force[None][0], force[0])
+                    ti.atomic_add(self.ib_total_force[None][1], force[1])
+                    ti.atomic_add(self.ib_total_force[None][2], force[2])
+                else:
+                    self.immersed_boundary_force[cell] = force
+            else:
+                self.immersed_boundary_force[cell] = force
+
+    @ti.kernel
+    def _apply_immersed_boundary_force_to_lbm_kernel(self):
+        for cell in ti.grouped(self.lbm.rho):
+            if self.lbm.solid[cell] == 0:
+                self.lbm.force[cell] += self.immersed_boundary_force[cell]
+            else:
+                self.immersed_boundary_force[cell] = ti.Vector([0.0, 0.0, 0.0])
+                self.lbm.force[cell] = ti.Vector([0.0, 0.0, 0.0])
+
+    @ti.kernel
+    def _compute_contact_diagnostics_kernel(self):
+        self.contact_candidate_count[None] = 0
+        self.contact_damped_particle_count[None] = 0
+
+        enabled = self.contact_enabled_field[None]
+        threshold = self.contact_fraction_threshold_field[None]
+        damping = self.contact_velocity_damping_field[None]
+
+        for p in range(self.mpm.num_particles[None]):
+            self.particle_contact_mask[p] = 0
+            if enabled != 0 and self.mpm.active[p] != 0:
+                grid_pos = self.mpm.x[p] * self.inv_dx
+                base = (grid_pos - 0.5).cast(ti.i32)
+                fx = grid_pos - base.cast(ti.f32)
+                weights = self._weights(fx)
+
+                dynamic_support = 0.0
+                static_solid_support = 0.0
+                for i, j, k in ti.static(ti.ndrange(3, 3, 3)):
+                    offset = ti.Vector([i, j, k])
+                    node = base + offset
+                    if self._inside_grid(node):
+                        weight = weights[i, 0] * weights[j, 1] * weights[k, 2]
+                        dynamic_support += weight * self.solid_volume_fraction[node]
+                        if self.lbm.solid[node] != 0:
+                            static_solid_support += weight
+
+                if dynamic_support >= threshold or static_solid_support >= threshold:
+                    self.particle_contact_mask[p] = 1
+                    ti.atomic_add(self.contact_candidate_count[None], 1)
+                    if damping > 0.0:
+                        self.mpm.v[p] *= 1.0 - damping
+                        ti.atomic_add(self.contact_damped_particle_count[None], 1)

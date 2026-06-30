@@ -8,7 +8,7 @@ A 3D two-way fluid-solid coupling simulator using:
 
 ## Current status
 
-Step 11: reference-data validation framework.
+Step 12: immersed-boundary/contact MVP.
 
 Implemented:
 
@@ -24,11 +24,12 @@ Implemented:
 - coupling stability guards and boundary-support diagnostics
 - visualization and post-processing utilities for snapshots and validation summaries
 - reference-data validation framework and small committed reference cases
+- immersed-boundary/contact MVP with dynamic occupancy diagnostics
 
 Not implemented yet:
 
 - high-fidelity external experimental/reference validation
-- advanced immersed-boundary/contact handling
+- advanced rigid-body/contact mechanics
 - interactive or production rendering workflow
 
 ## External references
@@ -57,12 +58,15 @@ python examples/coupling_stability_boundary.py
 python examples/postprocess_snapshots.py
 python examples/postprocess_validation_summary.py
 python examples/reference_validation_suite.py
+python examples/immersed_boundary_contact_smoke.py
 ```
 
 See [docs/postprocessing.md](docs/postprocessing.md) for NPZ, CSV/JSON, PNG, and VTK
 post-processing notes.
 See [docs/reference_validation.md](docs/reference_validation.md) for the committed JSON
 reference-data validation workflow.
+See [docs/immersed_boundary_contact.md](docs/immersed_boundary_contact.md) for the
+Step 12 immersed-boundary/contact MVP.
 
 ## Roadmap
 
@@ -75,6 +79,6 @@ reference-data validation workflow.
 
 ## Next milestones
 
-- Explore advanced immersed-boundary/contact handling.
 - Add interactive or production rendering workflow.
 - Add larger external reference-data campaigns.
+- Explore advanced rigid-body/contact mechanics.

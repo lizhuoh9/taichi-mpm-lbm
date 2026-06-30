@@ -94,8 +94,15 @@ def test_output_writer_writes_npz_snapshot(tmp_path):
     assert data["mpm_velocities"].shape == (1, 3)
     assert data["coupling_force"].shape == (8, 8, 8, 3)
     assert data["solid_volume_fraction"].shape == (8, 8, 8)
+    assert data["immersed_boundary_force"].shape == (8, 8, 8, 3)
     assert data["coupling_particle_valid_weight"].shape == (1,)
     assert data["coupling_particle_mask"].shape == (1,)
+    assert data["particle_contact_mask"].shape == (1,)
+    assert data["ib_total_force"].shape == (3,)
+    assert int(data["ib_active_cell_count"]) >= 0
+    assert int(data["ib_clipped_cell_count"]) >= 0
+    assert int(data["contact_candidate_count"]) >= 0
+    assert int(data["contact_damped_particle_count"]) >= 0
     assert int(data["coupling_unsupported_particle_count"]) >= 0
     assert int(data["coupling_partial_support_particle_count"]) >= 0
     assert int(data["coupling_clipped_particle_count"]) >= 0

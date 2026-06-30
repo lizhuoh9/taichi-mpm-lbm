@@ -1,8 +1,10 @@
 # Reference-Data Validation
 
-Step 11 adds reference-data validation for small deterministic cases. The goal
-is to compare current metrics against committed JSON baselines so solver,
-coupling, output, or post-processing changes can catch regressions early.
+Step 11 added reference-data validation for small deterministic cases. Step 12
+extends the committed baseline set with an immersed-boundary/contact MVP
+reference case. The goal is to compare current metrics against committed JSON
+baselines so solver, coupling, output, or post-processing changes can catch
+regressions early.
 
 ## What This Is
 
@@ -107,10 +109,21 @@ not as incidental generated output.
 6. Run `examples/reference_validation_suite.py`.
 7. Update this document if the schema or workflow changes.
 
+## Current Reference Set
+
+The committed reference set includes:
+
+- LBM periodic mass conservation.
+- LBM force response.
+- MPM weak-gravity response.
+- Coupled enabled-vs-disabled drift.
+- Coupling stability and boundary-support diagnostics.
+- Step 12 immersed-boundary/contact MVP diagnostics.
+
 ## Limitations
 
 - Reference validation is diagnostic regression coverage.
 - Current reference files are small JSON metric baselines.
 - No binary reference datasets are committed.
-- No external solver or experimental data is included in Step 11.
-- Passing Step 11 does not prove high-fidelity physical validation.
+- No external solver or experimental data is included.
+- Passing the reference suite does not prove high-fidelity physical validation.

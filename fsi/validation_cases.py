@@ -425,6 +425,162 @@ def run_coupling_boundary_support_case() -> ValidationReport:
     )
 
 
+def run_immersed_boundary_drag_case() -> ValidationReport:
+    config = SimulationConfig(
+        num_steps=1,
+        lbm_dt=1.0e-3,
+        lbm=_periodic_lbm_config(initial_velocity=(1.0e-3, 0.0, 0.0)),
+        mpm=MPMConfig(
+            nx=8,
+            ny=8,
+            nz=8,
+            max_particles=128,
+            dx=1.0,
+            dt=1.0e-3,
+            density=1.0,
+            youngs_modulus=100.0,
+            poisson_ratio=0.25,
+            gravity=(0.0, 0.0, 0.0),
+            boundary_width=1,
+        ),
+        coupling=CouplingConfig(
+            gamma=0.0,
+            mpm_substeps_per_lbm_step=1,
+            immersed_boundary_enabled=True,
+            immersed_boundary_drag=0.1,
+            immersed_boundary_fraction_threshold=0.01,
+            immersed_boundary_max_force=1.0e-3,
+        ),
+    )
+    sim = FSISimulation(config)
+    sim.initialize_lbm()
+    sim.initialize_mpm_from_numpy(
+        positions=np.array([[4.0, 4.0, 4.0]], dtype=np.float32),
+        velocities=np.zeros((1, 3), dtype=np.float32),
+        particle_mass=1.0,
+        particle_volume=4.0,
+    )
+
+    initial_speed = sim.lbm.max_velocity_norm()
+    sim.step()
+    diagnostics = sim.coupler.coupling_diagnostics()
+    velocity = sim.lbm.velocity_numpy()
+
+    return ValidationReport(
+        case_name="immersed_boundary_drag",
+        metrics=(
+            bounded_metric(
+                "ib_active_cell_count",
+                float(diagnostics["ib_active_cell_count"]),
+                lower=1.0,
+                description="At least one dynamic occupied fluid cell receives IB drag.",
+            ),
+            bounded_metric(
+                "ib_total_force_x",
+                float(diagnostics["ib_total_force_x"]),
+                upper=-1.0e-12,
+                description="IB drag opposes positive x fluid velocity.",
+            ),
+            bounded_metric(
+                "ib_total_force_norm",
+                float(diagnostics["ib_total_force_norm"]),
+                lower=1.0e-12,
+                description="IB drag total force is nonzero.",
+            ),
+            bounded_metric(
+                "max_velocity_not_increased",
+                float(sim.lbm.max_velocity_norm() - initial_speed),
+                upper=1.0e-8,
+                description="The IB smoke case does not increase max fluid speed.",
+            ),
+            bounded_metric(
+                "velocity_finite",
+                1.0 if np.isfinite(velocity).all() else 0.0,
+                lower=1.0,
+                upper=1.0,
+                description="LBM velocity remains finite with IB drag enabled.",
+            ),
+        ),
+        metadata={"drag": 0.1, "particle_volume": 4.0},
+    )
+
+
+def run_contact_diagnostics_case() -> ValidationReport:
+    config = SimulationConfig(
+        num_steps=1,
+        lbm_dt=1.0e-3,
+        lbm=_periodic_lbm_config(initial_velocity=(0.0, 0.0, 0.0)),
+        mpm=MPMConfig(
+            nx=8,
+            ny=8,
+            nz=8,
+            max_particles=128,
+            dx=1.0,
+            dt=1.0e-3,
+            density=1.0,
+            youngs_modulus=100.0,
+            poisson_ratio=0.25,
+            gravity=(0.0, 0.0, 0.0),
+            boundary_width=1,
+        ),
+        coupling=CouplingConfig(
+            gamma=0.0,
+            mpm_substeps_per_lbm_step=1,
+            contact_enabled=True,
+            contact_velocity_damping=0.25,
+            contact_fraction_threshold=0.01,
+        ),
+    )
+    solid = np.zeros((8, 8, 8), dtype=np.int32)
+    solid[3:6, 3:6, 3:6] = 1
+
+    sim = FSISimulation(config)
+    sim.initialize_lbm(solid_np=solid)
+    sim.initialize_mpm_from_numpy(
+        positions=np.array([[4.0, 4.0, 4.0]], dtype=np.float32),
+        velocities=np.array([[0.1, 0.0, 0.0]], dtype=np.float32),
+        particle_mass=1.0,
+        particle_volume=1.0,
+    )
+
+    initial_speed = sim.mpm.max_velocity_norm()
+    sim.step()
+    final_speed = sim.mpm.max_velocity_norm()
+    diagnostics = sim.coupler.coupling_diagnostics()
+    contact_mask_sum = float(sim.coupler.particle_contact_mask_numpy().sum())
+
+    return ValidationReport(
+        case_name="contact_diagnostics",
+        metrics=(
+            bounded_metric(
+                "contact_candidate_count",
+                float(diagnostics["contact_candidate_count"]),
+                lower=1.0,
+                description="Static solid support marks at least one contact candidate.",
+            ),
+            bounded_metric(
+                "contact_damped_particle_count",
+                float(diagnostics["contact_damped_particle_count"]),
+                lower=1.0,
+                description="Contact damping is applied to at least one particle.",
+            ),
+            bounded_metric(
+                "particle_contact_mask_sum",
+                contact_mask_sum,
+                lower=1.0,
+                description="The active particle contact mask is set.",
+            ),
+            bounded_metric(
+                "particle_speed_delta",
+                float(final_speed - initial_speed),
+                upper=-1.0e-6,
+                description="Contact damping reduces particle speed.",
+            ),
+        ),
+        metadata={"damping": 0.25, "initial_speed": initial_speed},
+    )
+
+
 def run_validation_suite() -> list[ValidationReport]:
     return [
         run_lbm_mass_conservation_case(),
@@ -435,4 +591,6 @@ def run_validation_suite() -> list[ValidationReport]:
         run_coupling_force_balance_case(),
         run_coupling_force_limit_case(),
         run_coupling_boundary_support_case(),
+        run_immersed_boundary_drag_case(),
+        run_contact_diagnostics_case(),
     ]

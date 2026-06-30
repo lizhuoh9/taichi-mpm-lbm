@@ -135,6 +135,15 @@ class FSISimulation:
             ],
             "coupling_clipped_particle_count": coupling_diagnostics["clipped_particle_count"],
             "coupling_effective_gamma": coupling_diagnostics["effective_gamma"],
+            "coupling_ib_active_cell_count": coupling_diagnostics["ib_active_cell_count"],
+            "coupling_ib_clipped_cell_count": coupling_diagnostics["ib_clipped_cell_count"],
+            "coupling_ib_total_force_norm": coupling_diagnostics["ib_total_force_norm"],
+            "coupling_contact_candidate_count": coupling_diagnostics[
+                "contact_candidate_count"
+            ],
+            "coupling_contact_damped_particle_count": coupling_diagnostics[
+                "contact_damped_particle_count"
+            ],
         }
 
     def _validate_initialized(self) -> None:

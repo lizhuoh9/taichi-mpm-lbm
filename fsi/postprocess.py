@@ -102,6 +102,12 @@ def summarize_coupling_diagnostics(output_dir: str | Path) -> dict[str, np.ndarr
             "coupling_unsupported_particle_count",
             "coupling_partial_support_particle_count",
             "coupling_clipped_particle_count",
+            "ib_force_norm",
+            "ib_total_force_norm",
+            "ib_active_cell_count",
+            "ib_clipped_cell_count",
+            "contact_candidate_count",
+            "contact_damped_particle_count",
         )
         if key in timeseries
     )
@@ -255,6 +261,10 @@ def _snapshot_timeseries_row(path: Path) -> dict[str, float | int]:
         row["mpm_max_velocity_norm"] = _max_vector_norm(data["mpm_velocities"])
     if "coupling_force" in data:
         row["coupling_force_norm"] = float(np.linalg.norm(np.asarray(data["coupling_force"])))
+    if "immersed_boundary_force" in data:
+        row["ib_force_norm"] = float(
+            np.linalg.norm(np.asarray(data["immersed_boundary_force"]))
+        )
     if "total_particle_coupling_force" in data:
         row["total_particle_coupling_force_norm"] = float(
             np.linalg.norm(np.asarray(data["total_particle_coupling_force"]))
@@ -263,10 +273,16 @@ def _snapshot_timeseries_row(path: Path) -> dict[str, float | int]:
         row["total_fluid_coupling_force_norm"] = float(
             np.linalg.norm(np.asarray(data["total_fluid_coupling_force"]))
         )
+    if "ib_total_force" in data:
+        row["ib_total_force_norm"] = float(np.linalg.norm(np.asarray(data["ib_total_force"])))
     for key in (
         "coupling_unsupported_particle_count",
         "coupling_partial_support_particle_count",
         "coupling_clipped_particle_count",
+        "ib_active_cell_count",
+        "ib_clipped_cell_count",
+        "contact_candidate_count",
+        "contact_damped_particle_count",
     ):
         if key in data:
             row[key] = _int_scalar(data[key])
@@ -299,6 +315,12 @@ def _ordered_keys(keys: set[str]) -> list[str]:
         "coupling_unsupported_particle_count",
         "coupling_partial_support_particle_count",
         "coupling_clipped_particle_count",
+        "ib_force_norm",
+        "ib_total_force_norm",
+        "ib_active_cell_count",
+        "ib_clipped_cell_count",
+        "contact_candidate_count",
+        "contact_damped_particle_count",
     ]
     ordered = [key for key in preferred if key in keys]
     ordered.extend(sorted(keys.difference(ordered)))

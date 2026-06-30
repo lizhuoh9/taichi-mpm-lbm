@@ -23,6 +23,8 @@ def _write_full_schema_snapshot(path, step: int) -> None:
     mpm_velocity = np.array([[step * 1.0e-4, 0.0, 0.0]], dtype=np.float32)
     coupling_force = np.zeros((8, 8, 8, 3), dtype=np.float32)
     coupling_force[4, 4, 4, 0] = step * 1.0e-6
+    immersed_boundary_force = np.zeros((8, 8, 8, 3), dtype=np.float32)
+    immersed_boundary_force[4, 4, 4, 0] = -step * 1.0e-7
 
     np.savez_compressed(
         path,
@@ -41,10 +43,17 @@ def _write_full_schema_snapshot(path, step: int) -> None:
         mpm_active=np.ones(1, dtype=np.int32),
         coupling_force=coupling_force,
         solid_volume_fraction=np.zeros((8, 8, 8), dtype=np.float32),
+        immersed_boundary_force=immersed_boundary_force,
         total_particle_coupling_force=np.array([step * 1.0e-6, 0.0, 0.0], dtype=np.float32),
         total_fluid_coupling_force=np.array([-step * 1.0e-6, 0.0, 0.0], dtype=np.float32),
         coupling_particle_valid_weight=np.ones(1, dtype=np.float32),
         coupling_particle_mask=np.ones(1, dtype=np.int32),
+        particle_contact_mask=np.ones(1, dtype=np.int32),
+        ib_total_force=np.array([-step * 1.0e-7, 0.0, 0.0], dtype=np.float32),
+        ib_active_cell_count=np.array(step + 1, dtype=np.int32),
+        ib_clipped_cell_count=np.array(step // 2, dtype=np.int32),
+        contact_candidate_count=np.array(1, dtype=np.int32),
+        contact_damped_particle_count=np.array(step > 0, dtype=np.int32),
         coupling_unsupported_particle_count=np.array(0, dtype=np.int32),
         coupling_partial_support_particle_count=np.array(step > 0, dtype=np.int32),
         coupling_clipped_particle_count=np.array(step // 2, dtype=np.int32),
@@ -119,6 +128,10 @@ def test_extract_snapshot_timeseries_from_full_schema_snapshots(tmp_path):
     assert "mpm_max_velocity_norm" in timeseries
     assert "coupling_force_norm" in timeseries
     assert "coupling_clipped_particle_count" in timeseries
+    assert "ib_force_norm" in timeseries
+    assert "ib_total_force_norm" in timeseries
+    assert "ib_active_cell_count" in timeseries
+    assert "contact_candidate_count" in timeseries
     assert len(timeseries["time"]) == 3
 
 
@@ -163,6 +176,10 @@ def test_summarize_coupling_diagnostics_extracts_step9_counts(tmp_path):
     assert "coupling_unsupported_particle_count" in diagnostics
     assert "coupling_partial_support_particle_count" in diagnostics
     assert "coupling_clipped_particle_count" in diagnostics
+    assert "ib_force_norm" in diagnostics
+    assert "ib_total_force_norm" in diagnostics
+    assert "ib_active_cell_count" in diagnostics
+    assert "contact_candidate_count" in diagnostics
 
 
 def test_timeseries_csv_and_json_writers(tmp_path):

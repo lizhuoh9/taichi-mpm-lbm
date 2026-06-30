@@ -99,6 +99,18 @@ def test_coupling_force_balance_case_passes(validation_reports):
     assert _metric_by_name(report, "fluid_force_x").value < 0.0
 
 
+def test_immersed_boundary_contact_cases_pass(validation_reports):
+    ib_report = validation_reports["immersed_boundary_drag"]
+    contact_report = validation_reports["contact_diagnostics"]
+
+    assert ib_report.passed
+    assert _metric_by_name(ib_report, "ib_active_cell_count").value >= 1.0
+    assert _metric_by_name(ib_report, "ib_total_force_x").value < 0.0
+    assert contact_report.passed
+    assert _metric_by_name(contact_report, "contact_candidate_count").value >= 1.0
+    assert _metric_by_name(contact_report, "contact_damped_particle_count").value >= 1.0
+
+
 def test_validation_suite_composes_expected_cases(validation_reports):
     reports = list(validation_reports.values())
 
@@ -111,5 +123,7 @@ def test_validation_suite_composes_expected_cases(validation_reports):
         "coupling_force_balance",
         "coupling_force_limit",
         "coupling_boundary_support",
+        "immersed_boundary_drag",
+        "contact_diagnostics",
     ]
     assert all(report.passed for report in reports)

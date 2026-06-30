@@ -156,6 +156,13 @@ class CouplingConfig:
     relative_velocity_limit: float | None = None
     gamma_ramp_steps: int = 0
     min_valid_weight: float = 1.0e-6
+    immersed_boundary_enabled: bool = False
+    immersed_boundary_drag: float = 0.0
+    immersed_boundary_fraction_threshold: float = 0.1
+    immersed_boundary_max_force: float | None = None
+    contact_enabled: bool = False
+    contact_velocity_damping: float = 0.0
+    contact_fraction_threshold: float = 0.5
 
     def validate(self) -> None:
         if self.gamma < 0.0:
@@ -174,6 +181,19 @@ class CouplingConfig:
             raise ValueError("min_valid_weight must be positive.")
         if self.min_valid_weight > 1.0:
             raise ValueError("min_valid_weight must not exceed 1.")
+        if self.immersed_boundary_drag < 0.0:
+            raise ValueError("immersed_boundary_drag must be non-negative.")
+        if not (0.0 <= self.immersed_boundary_fraction_threshold <= 1.0):
+            raise ValueError("immersed_boundary_fraction_threshold must be in [0, 1].")
+        if (
+            self.immersed_boundary_max_force is not None
+            and self.immersed_boundary_max_force <= 0.0
+        ):
+            raise ValueError("immersed_boundary_max_force must be positive when provided.")
+        if not (0.0 <= self.contact_velocity_damping <= 1.0):
+            raise ValueError("contact_velocity_damping must be in [0, 1].")
+        if not (0.0 <= self.contact_fraction_threshold <= 1.0):
+            raise ValueError("contact_fraction_threshold must be in [0, 1].")
 
 
 @dataclass(frozen=True)

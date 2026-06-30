@@ -83,6 +83,28 @@ def test_invalid_coupling_min_valid_weight_fails():
         CouplingConfig(min_valid_weight=1.1).validate()
 
 
+def test_invalid_immersed_boundary_config_fails():
+    with pytest.raises(ValueError):
+        CouplingConfig(immersed_boundary_drag=-1.0).validate()
+    with pytest.raises(ValueError):
+        CouplingConfig(immersed_boundary_fraction_threshold=-0.1).validate()
+    with pytest.raises(ValueError):
+        CouplingConfig(immersed_boundary_fraction_threshold=1.1).validate()
+    with pytest.raises(ValueError):
+        CouplingConfig(immersed_boundary_max_force=0.0).validate()
+
+
+def test_invalid_contact_config_fails():
+    with pytest.raises(ValueError):
+        CouplingConfig(contact_velocity_damping=-0.1).validate()
+    with pytest.raises(ValueError):
+        CouplingConfig(contact_velocity_damping=1.1).validate()
+    with pytest.raises(ValueError):
+        CouplingConfig(contact_fraction_threshold=-0.1).validate()
+    with pytest.raises(ValueError):
+        CouplingConfig(contact_fraction_threshold=1.1).validate()
+
+
 def test_invalid_output_interval_fails():
     cfg = OutputConfig(output_interval=0)
     with pytest.raises(ValueError):

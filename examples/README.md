@@ -14,6 +14,7 @@ Current examples cover:
 - post-processing snapshots into CSV/JSON/PNG summaries
 - post-processing validation reports
 - reference-data validation against committed JSON baselines
+- immersed-boundary/contact MVP smoke diagnostics
 
 Step 10 post-processing examples:
 
@@ -28,3 +29,8 @@ Step 11 reference-validation examples:
   JSON reference baselines and export JSON/CSV summaries.
 - `generate_reference_data.py`: intentionally refresh committed reference JSON
   files after reviewing the resulting diff.
+
+Step 12 immersed-boundary/contact example:
+
+- `immersed_boundary_contact_smoke.py`: run a tiny opt-in IB/contact MVP case
+  and print scalar fluid, particle, IB, and contact diagnostics.

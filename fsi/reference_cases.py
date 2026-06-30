@@ -12,16 +12,19 @@ from .reference import (
 )
 from .validation import ValidationReport
 from .validation_cases import (
+    run_contact_diagnostics_case,
     run_coupled_drift_case,
     run_coupling_boundary_support_case,
     run_coupling_force_limit_case,
+    run_immersed_boundary_drag_case,
     run_lbm_force_response_case,
     run_lbm_mass_conservation_case,
     run_mpm_gravity_response_case,
 )
 
 
-CREATED_BY = "fsi-lbm-mpm Step 11 reference generator"
+STEP11_CREATED_BY = "fsi-lbm-mpm Step 11 reference generator"
+STEP12_CREATED_BY = "fsi-lbm-mpm Step 12 reference generator"
 
 
 def default_reference_data_dir() -> Path:
@@ -67,8 +70,22 @@ def compute_coupling_stability_reference_metrics() -> dict[str, float]:
     return {**force_metrics, **boundary_metrics}
 
 
+def compute_immersed_boundary_contact_reference_metrics() -> dict[str, float]:
+    ib_report = run_immersed_boundary_drag_case()
+    contact_report = run_contact_diagnostics_case()
+    ib_metrics = _selected_metrics(
+        ib_report,
+        ("ib_active_cell_count", "ib_total_force_x", "ib_total_force_norm"),
+    )
+    contact_metrics = _selected_metrics(
+        contact_report,
+        ("contact_candidate_count", "contact_damped_particle_count"),
+    )
+    return {**ib_metrics, **contact_metrics}
+
+
 def build_reference_datasets() -> list[ReferenceDataset]:
-    """Compute all Step 11 reference datasets from the current implementation."""
+    """Compute all committed reference datasets from the current implementation."""
 
     return [
         ReferenceDataset(
@@ -81,7 +98,7 @@ def build_reference_datasets() -> list[ReferenceDataset]:
                 "max_velocity_norm": ReferenceMetricTolerance(abs=1.0e-4, rel=0.0),
             },
             metadata={"source_case": "lbm_periodic_mass_conservation", "steps": 20},
-            created_by=CREATED_BY,
+            created_by=STEP11_CREATED_BY,
         ),
         ReferenceDataset(
             schema_version=1,
@@ -93,7 +110,7 @@ def build_reference_datasets() -> list[ReferenceDataset]:
                 "max_velocity_norm": ReferenceMetricTolerance(abs=1.0e-8, rel=1.0e-2),
             },
             metadata={"source_case": "lbm_force_response", "steps": 20},
-            created_by=CREATED_BY,
+            created_by=STEP11_CREATED_BY,
         ),
         ReferenceDataset(
             schema_version=1,
@@ -106,7 +123,7 @@ def build_reference_datasets() -> list[ReferenceDataset]:
                 "velocities_finite": ReferenceMetricTolerance(abs=0.0, rel=0.0),
             },
             metadata={"source_case": "mpm_gravity_response", "steps": 10},
-            created_by=CREATED_BY,
+            created_by=STEP11_CREATED_BY,
         ),
         ReferenceDataset(
             schema_version=1,
@@ -119,7 +136,7 @@ def build_reference_datasets() -> list[ReferenceDataset]:
                 "enabled_minus_disabled_dx": ReferenceMetricTolerance(abs=1.0e-6, rel=5.0e-2),
             },
             metadata={"source_case": "coupled_enabled_vs_disabled_drift", "steps": 2},
-            created_by=CREATED_BY,
+            created_by=STEP11_CREATED_BY,
         ),
         ReferenceDataset(
             schema_version=1,
@@ -138,7 +155,27 @@ def build_reference_datasets() -> list[ReferenceDataset]:
                     "coupling_boundary_support",
                 ]
             },
-            created_by=CREATED_BY,
+            created_by=STEP11_CREATED_BY,
+        ),
+        ReferenceDataset(
+            schema_version=1,
+            case_name="immersed_boundary_contact_reference",
+            description="Small Step 12 immersed-boundary/contact MVP reference.",
+            metrics=compute_immersed_boundary_contact_reference_metrics(),
+            tolerances={
+                "ib_active_cell_count": ReferenceMetricTolerance(abs=0.0, rel=0.0),
+                "ib_total_force_x": ReferenceMetricTolerance(abs=1.0e-9, rel=1.0e-3),
+                "ib_total_force_norm": ReferenceMetricTolerance(abs=1.0e-9, rel=1.0e-3),
+                "contact_candidate_count": ReferenceMetricTolerance(abs=0.0, rel=0.0),
+                "contact_damped_particle_count": ReferenceMetricTolerance(abs=0.0, rel=0.0),
+            },
+            metadata={
+                "source_cases": [
+                    "immersed_boundary_drag",
+                    "contact_diagnostics",
+                ]
+            },
+            created_by=STEP12_CREATED_BY,
         ),
     ]
 
@@ -183,6 +220,9 @@ def _current_metrics_by_case() -> dict[str, dict[str, float]]:
         "mpm_gravity_reference": compute_mpm_gravity_reference_metrics(),
         "coupled_drift_reference": compute_coupled_drift_reference_metrics(),
         "coupling_stability_reference": compute_coupling_stability_reference_metrics(),
+        "immersed_boundary_contact_reference": (
+            compute_immersed_boundary_contact_reference_metrics()
+        ),
     }
 
 
