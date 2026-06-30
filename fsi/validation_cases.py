@@ -294,6 +294,137 @@ def run_coupling_force_balance_case() -> ValidationReport:
     )
 
 
+def run_coupling_force_limit_case() -> ValidationReport:
+    config = SimulationConfig(
+        num_steps=1,
+        lbm_dt=0.1,
+        lbm=_periodic_lbm_config(initial_velocity=(1.0, 0.0, 0.0)),
+        mpm=MPMConfig(
+            nx=8,
+            ny=8,
+            nz=8,
+            max_particles=128,
+            dx=1.0,
+            dt=1.0e-3,
+            density=1.0,
+            youngs_modulus=100.0,
+            poisson_ratio=0.25,
+            gravity=(0.0, 0.0, 0.0),
+            boundary_width=1,
+        ),
+        coupling=CouplingConfig(
+            gamma=100.0,
+            force_limit=0.05,
+            mpm_substeps_per_lbm_step=1,
+        ),
+    )
+    sim = _initialized_one_particle_simulation(config)
+    sim.coupler.compute_coupling_forces(dt_ratio=1.0)
+
+    particle_force = sim.coupler.total_particle_coupling_force()
+    fluid_force_density = sim.coupler.total_fluid_coupling_force()
+    integrated_fluid_force = fluid_force_density * sim.coupler.cell_volume
+    diagnostics = sim.coupler.coupling_diagnostics()
+
+    return ValidationReport(
+        case_name="coupling_force_limit",
+        metrics=(
+            bounded_metric(
+                "particle_force_norm",
+                float(np.linalg.norm(particle_force)),
+                upper=0.05 + 1.0e-7,
+                description="High-gamma particle coupling force is clipped.",
+            ),
+            bounded_metric(
+                "clipped_particle_count",
+                float(diagnostics["clipped_particle_count"]),
+                lower=1.0,
+                description="At least one particle records force or velocity clipping.",
+            ),
+            bounded_metric(
+                "force_balance_norm",
+                float(np.linalg.norm(particle_force + integrated_fluid_force)),
+                upper=1.0e-6,
+                description="Clipped particle force still balances fluid reaction.",
+            ),
+        ),
+        metadata={"gamma": 100.0, "force_limit": 0.05},
+    )
+
+
+def run_coupling_boundary_support_case() -> ValidationReport:
+    config = SimulationConfig(
+        num_steps=1,
+        lbm_dt=0.1,
+        lbm=_periodic_lbm_config(initial_velocity=(1.0, 0.0, 0.0)),
+        mpm=MPMConfig(
+            nx=8,
+            ny=8,
+            nz=8,
+            max_particles=128,
+            dx=1.0,
+            dt=1.0e-3,
+            density=1.0,
+            youngs_modulus=100.0,
+            poisson_ratio=0.25,
+            gravity=(0.0, 0.0, 0.0),
+            boundary_width=1,
+        ),
+        coupling=CouplingConfig(
+            gamma=1.0,
+            min_valid_weight=1.0e-6,
+            mpm_substeps_per_lbm_step=1,
+        ),
+    )
+    sim = FSISimulation(config)
+    sim.initialize_mpm_from_numpy(
+        positions=np.array([[-0.75, 4.0, 4.0]], dtype=np.float32),
+        velocities=np.zeros((1, 3), dtype=np.float32),
+        particle_mass=1.0,
+        particle_volume=1.0,
+    )
+    sim.initialize_lbm()
+    sim.coupler.compute_coupling_forces(dt_ratio=1.0)
+
+    particle_force = sim.coupler.total_particle_coupling_force()
+    fluid_force_density = sim.coupler.total_fluid_coupling_force()
+    integrated_fluid_force = fluid_force_density * sim.coupler.cell_volume
+    diagnostics = sim.coupler.coupling_diagnostics()
+
+    return ValidationReport(
+        case_name="coupling_boundary_support",
+        metrics=(
+            bounded_metric(
+                "partial_support_particle_count",
+                float(diagnostics["partial_support_particle_count"]),
+                lower=1.0,
+                description="Near-boundary particle records partial support.",
+            ),
+            bounded_metric(
+                "min_particle_valid_weight",
+                float(diagnostics["min_particle_valid_weight"]),
+                lower=1.0e-6,
+                upper=1.0 - 1.0e-5,
+                description="Valid support is finite and below full support.",
+            ),
+            bounded_metric(
+                "force_balance_norm",
+                float(np.linalg.norm(particle_force + integrated_fluid_force)),
+                upper=1.0e-6,
+                description="Partial-support coupling still balances fluid reaction.",
+            ),
+            bounded_metric(
+                "particle_force_finite",
+                1.0 if np.isfinite(particle_force).all() else 0.0,
+                lower=1.0,
+                upper=1.0,
+                description="Boundary particle force remains finite.",
+            ),
+        ),
+        metadata={"particle_position": [-0.75, 4.0, 4.0], "min_valid_weight": 1.0e-6},
+    )
+
+
 def run_validation_suite() -> list[ValidationReport]:
     return [
         run_lbm_mass_conservation_case(),
@@ -302,4 +433,6 @@ def run_validation_suite() -> list[ValidationReport]:
         run_mpm_gravity_response_case(),
         run_coupled_drift_case(),
         run_coupling_force_balance_case(),
+        run_coupling_force_limit_case(),
+        run_coupling_boundary_support_case(),
     ]

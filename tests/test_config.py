@@ -59,6 +59,31 @@ def test_invalid_coupling_gamma_fails():
         cfg.validate()
 
 
+def test_invalid_coupling_force_limit_fails():
+    cfg = CouplingConfig(force_limit=0.0)
+    with pytest.raises(ValueError):
+        cfg.validate()
+
+
+def test_invalid_coupling_relative_velocity_limit_fails():
+    cfg = CouplingConfig(relative_velocity_limit=0.0)
+    with pytest.raises(ValueError):
+        cfg.validate()
+
+
+def test_invalid_coupling_gamma_ramp_steps_fails():
+    cfg = CouplingConfig(gamma_ramp_steps=-1)
+    with pytest.raises(ValueError):
+        cfg.validate()
+
+
+def test_invalid_coupling_min_valid_weight_fails():
+    with pytest.raises(ValueError):
+        CouplingConfig(min_valid_weight=0.0).validate()
+    with pytest.raises(ValueError):
+        CouplingConfig(min_valid_weight=1.1).validate()
+
+
 def test_invalid_output_interval_fails():
     cfg = OutputConfig(output_interval=0)
     with pytest.raises(ValueError):

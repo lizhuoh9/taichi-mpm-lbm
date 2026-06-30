@@ -94,6 +94,11 @@ def test_output_writer_writes_npz_snapshot(tmp_path):
     assert data["mpm_velocities"].shape == (1, 3)
     assert data["coupling_force"].shape == (8, 8, 8, 3)
     assert data["solid_volume_fraction"].shape == (8, 8, 8)
+    assert data["coupling_particle_valid_weight"].shape == (1,)
+    assert data["coupling_particle_mask"].shape == (1,)
+    assert int(data["coupling_unsupported_particle_count"]) >= 0
+    assert int(data["coupling_partial_support_particle_count"]) >= 0
+    assert int(data["coupling_clipped_particle_count"]) >= 0
 
 
 def test_output_respects_field_flags(tmp_path):

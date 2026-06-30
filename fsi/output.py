@@ -69,12 +69,24 @@ class SimulationOutputWriter:
             )
 
         if self.config.write_coupling_fields:
+            coupling_diagnostics = sim.coupler.coupling_diagnostics()
             arrays.update(
                 {
                     "coupling_force": sim.coupler.coupling_force_numpy(),
                     "solid_volume_fraction": sim.coupler.solid_volume_fraction_numpy(),
                     "total_particle_coupling_force": sim.coupler.total_particle_coupling_force(),
                     "total_fluid_coupling_force": sim.coupler.total_fluid_coupling_force(),
+                    "coupling_particle_valid_weight": sim.coupler.particle_valid_weights_numpy(),
+                    "coupling_particle_mask": sim.coupler.particle_coupling_mask_numpy(),
+                    "coupling_unsupported_particle_count": np.array(
+                        coupling_diagnostics["unsupported_particle_count"], dtype=np.int32
+                    ),
+                    "coupling_partial_support_particle_count": np.array(
+                        coupling_diagnostics["partial_support_particle_count"], dtype=np.int32
+                    ),
+                    "coupling_clipped_particle_count": np.array(
+                        coupling_diagnostics["clipped_particle_count"], dtype=np.int32
+                    ),
                 }
             )
 

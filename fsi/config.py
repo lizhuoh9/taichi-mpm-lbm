@@ -152,6 +152,10 @@ class CouplingConfig:
     kernel: CouplingKernel = "quadratic"
 
     build_solid_volume_fraction: bool = True
+    force_limit: float | None = None
+    relative_velocity_limit: float | None = None
+    gamma_ramp_steps: int = 0
+    min_valid_weight: float = 1.0e-6
 
     def validate(self) -> None:
         if self.gamma < 0.0:
@@ -160,6 +164,16 @@ class CouplingConfig:
             raise ValueError("mpm_substeps_per_lbm_step must be positive.")
         if self.kernel not in _COUPLING_KERNELS:
             raise ValueError(f"Unsupported coupling kernel: {self.kernel}.")
+        if self.force_limit is not None and self.force_limit <= 0.0:
+            raise ValueError("force_limit must be positive when provided.")
+        if self.relative_velocity_limit is not None and self.relative_velocity_limit <= 0.0:
+            raise ValueError("relative_velocity_limit must be positive when provided.")
+        if self.gamma_ramp_steps < 0:
+            raise ValueError("gamma_ramp_steps must be non-negative.")
+        if self.min_valid_weight <= 0.0:
+            raise ValueError("min_valid_weight must be positive.")
+        if self.min_valid_weight > 1.0:
+            raise ValueError("min_valid_weight must not exceed 1.")
 
 
 @dataclass(frozen=True)

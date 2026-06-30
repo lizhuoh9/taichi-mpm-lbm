@@ -10,3 +10,4 @@ Current examples cover:
 - coupled penalty-smoke runs
 - NPZ output snapshots
 - benchmark-style validation summaries
+- coupling stability and boundary-support diagnostics

@@ -8,7 +8,7 @@ A 3D two-way fluid-solid coupling simulator using:
 
 ## Current status
 
-Step 8: benchmark-style validation cases.
+Step 9: coupling stability and boundary handling.
 
 Implemented:
 
@@ -21,12 +21,13 @@ Implemented:
 - lightweight coupled example and validation tests
 - NPZ/VTK simulation output snapshots
 - benchmark-style validation cases
+- coupling stability guards and boundary-support diagnostics
 
 Not implemented yet:
 
-- improved coupling stability and boundary handling
 - advanced visualization/rendering workflow
 - high-fidelity validation against external reference data
+- advanced immersed-boundary/contact handling
 
 ## External references
 
@@ -50,6 +51,7 @@ python examples/mpm_standalone_cube.py
 python examples/coupled_penalty_smoke.py
 python examples/coupled_output_snapshot.py
 python examples/validation_benchmark_suite.py
+python examples/coupling_stability_boundary.py
 ```
 
 ## Roadmap
@@ -63,6 +65,6 @@ python examples/validation_benchmark_suite.py
 
 ## Next milestones
 
-- Improve coupling stability and boundary handling.
 - Add richer visualization/post-processing tools.
 - Add higher-fidelity reference-data validation cases.
+- Explore advanced immersed-boundary/contact handling.

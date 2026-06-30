@@ -109,5 +109,7 @@ def test_validation_suite_composes_expected_cases(validation_reports):
         "mpm_gravity_response",
         "coupled_enabled_vs_disabled_drift",
         "coupling_force_balance",
+        "coupling_force_limit",
+        "coupling_boundary_support",
     ]
     assert all(report.passed for report in reports)

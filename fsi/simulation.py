@@ -116,6 +116,7 @@ class FSISimulation:
 
     def diagnostics(self) -> dict[str, object]:
         self._validate_initialized()
+        coupling_diagnostics = self.coupler.coupling_diagnostics()
         return {
             "step": self.step_index,
             "time": self.time,
@@ -126,6 +127,14 @@ class FSISimulation:
             "mpm_max_velocity_norm": self.mpm.max_velocity_norm(),
             "total_particle_coupling_force": self.coupler.total_particle_coupling_force(),
             "total_fluid_coupling_force": self.coupler.total_fluid_coupling_force(),
+            "coupling_unsupported_particle_count": coupling_diagnostics[
+                "unsupported_particle_count"
+            ],
+            "coupling_partial_support_particle_count": coupling_diagnostics[
+                "partial_support_particle_count"
+            ],
+            "coupling_clipped_particle_count": coupling_diagnostics["clipped_particle_count"],
+            "coupling_effective_gamma": coupling_diagnostics["effective_gamma"],
         }
 
     def _validate_initialized(self) -> None:
