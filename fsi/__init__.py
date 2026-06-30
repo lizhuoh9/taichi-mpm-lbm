@@ -22,6 +22,13 @@ if TYPE_CHECKING:
     from .lbm3d import LBMSolver3D
     from .mpm3d import MPMSolver3D
     from .output import SimulationOutputWriter
+    from .postprocess import (
+        SnapshotInfo,
+        extract_snapshot_timeseries,
+        list_npz_snapshots,
+        load_validation_summary,
+        validation_summary_table,
+    )
     from .simulation import FSISimulation
     from .validation import ValidationMetric, ValidationReport
     from .validation_cases import run_validation_suite
@@ -38,9 +45,14 @@ __all__ = [
     "OutputConfig",
     "SimulationConfig",
     "SimulationOutputWriter",
+    "SnapshotInfo",
     "ValidationMetric",
     "ValidationReport",
+    "extract_snapshot_timeseries",
+    "list_npz_snapshots",
+    "load_validation_summary",
     "run_validation_suite",
+    "validation_summary_table",
 ]
 
 
@@ -70,6 +82,31 @@ def __getattr__(name: str):
 
         globals()[name] = SimulationOutputWriter
         return SimulationOutputWriter
+    if name == "SnapshotInfo":
+        from .postprocess import SnapshotInfo
+
+        globals()[name] = SnapshotInfo
+        return SnapshotInfo
+    if name == "list_npz_snapshots":
+        from .postprocess import list_npz_snapshots
+
+        globals()[name] = list_npz_snapshots
+        return list_npz_snapshots
+    if name == "extract_snapshot_timeseries":
+        from .postprocess import extract_snapshot_timeseries
+
+        globals()[name] = extract_snapshot_timeseries
+        return extract_snapshot_timeseries
+    if name == "load_validation_summary":
+        from .postprocess import load_validation_summary
+
+        globals()[name] = load_validation_summary
+        return load_validation_summary
+    if name == "validation_summary_table":
+        from .postprocess import validation_summary_table
+
+        globals()[name] = validation_summary_table
+        return validation_summary_table
     if name == "ValidationMetric":
         from .validation import ValidationMetric
 

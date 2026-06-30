@@ -13,3 +13,8 @@ def test_import_fsi_package():
     assert hasattr(fsi, "ValidationMetric")
     assert hasattr(fsi, "ValidationReport")
     assert hasattr(fsi, "run_validation_suite")
+    assert "SnapshotInfo" in fsi.__all__
+    assert "list_npz_snapshots" in fsi.__all__
+    assert "extract_snapshot_timeseries" in fsi.__all__
+    assert "load_validation_summary" in fsi.__all__
+    assert "validation_summary_table" in fsi.__all__

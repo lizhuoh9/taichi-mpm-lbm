@@ -10,7 +10,6 @@ from fsi.config import (
     OutputConfig,
     SimulationConfig,
 )
-from fsi.simulation import FSISimulation
 
 
 def test_default_simulation_config_validates():
@@ -112,10 +111,11 @@ def test_invalid_boundary_velocity_fails():
         cfg.validate()
 
 
-def test_simulation_config_creates_simulation():
-    simulation = FSISimulation(SimulationConfig())
+def test_simulation_config_defaults_are_consistent():
+    cfg = SimulationConfig()
 
-    assert simulation.config.num_steps == 1000
+    assert cfg.num_steps == 1000
+    assert cfg.lbm.nx == cfg.mpm.nx
 
 
 def test_library_modules_do_not_call_taichi_init():

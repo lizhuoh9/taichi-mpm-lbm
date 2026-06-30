@@ -8,7 +8,7 @@ A 3D two-way fluid-solid coupling simulator using:
 
 ## Current status
 
-Step 9: coupling stability and boundary handling.
+Step 10: visualization and post-processing workflow.
 
 Implemented:
 
@@ -22,12 +22,13 @@ Implemented:
 - NPZ/VTK simulation output snapshots
 - benchmark-style validation cases
 - coupling stability guards and boundary-support diagnostics
+- visualization and post-processing utilities for snapshots and validation summaries
 
 Not implemented yet:
 
-- advanced visualization/rendering workflow
 - high-fidelity validation against external reference data
 - advanced immersed-boundary/contact handling
+- interactive or production rendering workflow
 
 ## External references
 
@@ -52,7 +53,12 @@ python examples/coupled_penalty_smoke.py
 python examples/coupled_output_snapshot.py
 python examples/validation_benchmark_suite.py
 python examples/coupling_stability_boundary.py
+python examples/postprocess_snapshots.py
+python examples/postprocess_validation_summary.py
 ```
+
+See [docs/postprocessing.md](docs/postprocessing.md) for NPZ, CSV/JSON, PNG, and VTK
+post-processing notes.
 
 ## Roadmap
 
@@ -65,6 +71,6 @@ python examples/coupling_stability_boundary.py
 
 ## Next milestones
 
-- Add richer visualization/post-processing tools.
 - Add higher-fidelity reference-data validation cases.
 - Explore advanced immersed-boundary/contact handling.
+- Add interactive or production rendering workflow.

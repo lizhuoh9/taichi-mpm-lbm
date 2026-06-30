@@ -21,7 +21,8 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "pytest>=7.0",
-  "ruff>=0.5.0"
+  "ruff>=0.5.0",
+  "matplotlib>=3.7.0"
 ]
 
 [tool.setuptools.packages.find]
@@ -37,7 +38,8 @@ norecursedirs = [
   "third_party"
 ]
 markers = [
-  "slow: longer-running validation or example-style tests"
+  "slow: longer-running validation or example-style tests",
+  "plotting: tests that require matplotlib"
 ]
 
 [tool.ruff]
