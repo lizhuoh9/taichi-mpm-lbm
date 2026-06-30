@@ -1,0 +1,24 @@
+{
+  "case_name": "lbm_periodic_mass_reference",
+  "created_by": "fsi-lbm-mpm Step 11 reference generator",
+  "description": "Small periodic LBM mass conservation reference.",
+  "metadata": {
+    "source_case": "lbm_periodic_mass_conservation",
+    "steps": 20
+  },
+  "metrics": {
+    "max_velocity_norm": 0.0,
+    "relative_mass_error": 1.1920928955078125e-07
+  },
+  "schema_version": 1,
+  "tolerances": {
+    "max_velocity_norm": {
+      "abs": 0.0001,
+      "rel": 0.0
+    },
+    "relative_mass_error": {
+      "abs": 1e-05,
+      "rel": 0.0
+    }
+  }
+}

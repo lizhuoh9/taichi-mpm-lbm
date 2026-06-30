@@ -18,3 +18,7 @@ def test_import_fsi_package():
     assert "extract_snapshot_timeseries" in fsi.__all__
     assert "load_validation_summary" in fsi.__all__
     assert "validation_summary_table" in fsi.__all__
+    assert "ReferenceDataset" in fsi.__all__
+    assert "ReferenceReport" in fsi.__all__
+    assert "load_reference_dataset" in fsi.__all__
+    assert "run_reference_validation_suite" in fsi.__all__

@@ -13,6 +13,7 @@ Current examples cover:
 - coupling stability and boundary-support diagnostics
 - post-processing snapshots into CSV/JSON/PNG summaries
 - post-processing validation reports
+- reference-data validation against committed JSON baselines
 
 Step 10 post-processing examples:
 
@@ -20,3 +21,10 @@ Step 10 post-processing examples:
   export CSV/JSON time series, and write a PNG plot.
 - `postprocess_validation_summary.py`: run the validation suite and flatten
   validation metrics to CSV.
+
+Step 11 reference-validation examples:
+
+- `reference_validation_suite.py`: compare current metrics against committed
+  JSON reference baselines and export JSON/CSV summaries.
+- `generate_reference_data.py`: intentionally refresh committed reference JSON
+  files after reviewing the resulting diff.

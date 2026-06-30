@@ -1,0 +1,36 @@
+{
+  "case_name": "coupling_stability_reference",
+  "created_by": "fsi-lbm-mpm Step 11 reference generator",
+  "description": "Step 9 force-limit and boundary-support reference.",
+  "metadata": {
+    "source_cases": [
+      "coupling_force_limit",
+      "coupling_boundary_support"
+    ]
+  },
+  "metrics": {
+    "force_balance_norm": 1.862645149230957e-08,
+    "min_particle_valid_weight": 0.21875,
+    "partial_support_particle_count": 1.0,
+    "particle_force_norm": 0.05000000074505806
+  },
+  "schema_version": 1,
+  "tolerances": {
+    "force_balance_norm": {
+      "abs": 1e-06,
+      "rel": 0.0
+    },
+    "min_particle_valid_weight": {
+      "abs": 1e-06,
+      "rel": 0.001
+    },
+    "partial_support_particle_count": {
+      "abs": 0.0,
+      "rel": 0.0
+    },
+    "particle_force_norm": {
+      "abs": 1e-07,
+      "rel": 0.001
+    }
+  }
+}

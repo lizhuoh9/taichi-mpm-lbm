@@ -1,0 +1,29 @@
+{
+  "case_name": "mpm_gravity_reference",
+  "created_by": "fsi-lbm-mpm Step 11 reference generator",
+  "description": "Weak-gravity MPM response reference.",
+  "metadata": {
+    "source_case": "mpm_gravity_response",
+    "steps": 10
+  },
+  "metrics": {
+    "center_of_mass_y_delta": -1.9073486328125e-06,
+    "positions_finite": 1.0,
+    "velocities_finite": 1.0
+  },
+  "schema_version": 1,
+  "tolerances": {
+    "center_of_mass_y_delta": {
+      "abs": 1e-06,
+      "rel": 0.01
+    },
+    "positions_finite": {
+      "abs": 0.0,
+      "rel": 0.0
+    },
+    "velocities_finite": {
+      "abs": 0.0,
+      "rel": 0.0
+    }
+  }
+}

@@ -8,7 +8,7 @@ A 3D two-way fluid-solid coupling simulator using:
 
 ## Current status
 
-Step 10: visualization and post-processing workflow.
+Step 11: reference-data validation framework.
 
 Implemented:
 
@@ -23,10 +23,11 @@ Implemented:
 - benchmark-style validation cases
 - coupling stability guards and boundary-support diagnostics
 - visualization and post-processing utilities for snapshots and validation summaries
+- reference-data validation framework and small committed reference cases
 
 Not implemented yet:
 
-- high-fidelity validation against external reference data
+- high-fidelity external experimental/reference validation
 - advanced immersed-boundary/contact handling
 - interactive or production rendering workflow
 
@@ -55,10 +56,13 @@ python examples/validation_benchmark_suite.py
 python examples/coupling_stability_boundary.py
 python examples/postprocess_snapshots.py
 python examples/postprocess_validation_summary.py
+python examples/reference_validation_suite.py
 ```
 
 See [docs/postprocessing.md](docs/postprocessing.md) for NPZ, CSV/JSON, PNG, and VTK
 post-processing notes.
+See [docs/reference_validation.md](docs/reference_validation.md) for the committed JSON
+reference-data validation workflow.
 
 ## Roadmap
 
@@ -71,6 +75,6 @@ post-processing notes.
 
 ## Next milestones
 
-- Add higher-fidelity reference-data validation cases.
 - Explore advanced immersed-boundary/contact handling.
 - Add interactive or production rendering workflow.
+- Add larger external reference-data campaigns.

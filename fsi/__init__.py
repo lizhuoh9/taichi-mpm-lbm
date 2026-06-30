@@ -29,6 +29,8 @@ if TYPE_CHECKING:
         load_validation_summary,
         validation_summary_table,
     )
+    from .reference import ReferenceDataset, ReferenceReport, load_reference_dataset
+    from .reference_cases import run_reference_validation_suite
     from .simulation import FSISimulation
     from .validation import ValidationMetric, ValidationReport
     from .validation_cases import run_validation_suite
@@ -43,6 +45,8 @@ __all__ = [
     "MPMConfig",
     "MPMSolver3D",
     "OutputConfig",
+    "ReferenceDataset",
+    "ReferenceReport",
     "SimulationConfig",
     "SimulationOutputWriter",
     "SnapshotInfo",
@@ -50,7 +54,9 @@ __all__ = [
     "ValidationReport",
     "extract_snapshot_timeseries",
     "list_npz_snapshots",
+    "load_reference_dataset",
     "load_validation_summary",
+    "run_reference_validation_suite",
     "run_validation_suite",
     "validation_summary_table",
 ]
@@ -107,6 +113,21 @@ def __getattr__(name: str):
 
         globals()[name] = validation_summary_table
         return validation_summary_table
+    if name == "ReferenceDataset":
+        from .reference import ReferenceDataset
+
+        globals()[name] = ReferenceDataset
+        return ReferenceDataset
+    if name == "ReferenceReport":
+        from .reference import ReferenceReport
+
+        globals()[name] = ReferenceReport
+        return ReferenceReport
+    if name == "load_reference_dataset":
+        from .reference import load_reference_dataset
+
+        globals()[name] = load_reference_dataset
+        return load_reference_dataset
     if name == "ValidationMetric":
         from .validation import ValidationMetric
 
@@ -122,4 +143,9 @@ def __getattr__(name: str):
 
         globals()[name] = run_validation_suite
         return run_validation_suite
+    if name == "run_reference_validation_suite":
+        from .reference_cases import run_reference_validation_suite
+
+        globals()[name] = run_reference_validation_suite
+        return run_reference_validation_suite
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

@@ -1,0 +1,24 @@
+{
+  "case_name": "lbm_force_response_reference",
+  "created_by": "fsi-lbm-mpm Step 11 reference generator",
+  "description": "Small forced periodic LBM velocity-growth reference.",
+  "metadata": {
+    "source_case": "lbm_force_response",
+    "steps": 20
+  },
+  "metrics": {
+    "max_velocity_norm": 7.204711437225342e-06,
+    "mean_ux_growth": 7.204711437225342e-06
+  },
+  "schema_version": 1,
+  "tolerances": {
+    "max_velocity_norm": {
+      "abs": 1e-08,
+      "rel": 0.01
+    },
+    "mean_ux_growth": {
+      "abs": 1e-08,
+      "rel": 0.01
+    }
+  }
+}

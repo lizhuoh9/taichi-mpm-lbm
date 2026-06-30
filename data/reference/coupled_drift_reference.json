@@ -1,0 +1,29 @@
+{
+  "case_name": "coupled_drift_reference",
+  "created_by": "fsi-lbm-mpm Step 11 reference generator",
+  "description": "Enabled-vs-disabled coupling drift reference.",
+  "metadata": {
+    "source_case": "coupled_enabled_vs_disabled_drift",
+    "steps": 2
+  },
+  "metrics": {
+    "disabled_dx_abs": 0.0,
+    "enabled_dx": 9.584426879882812e-05,
+    "enabled_minus_disabled_dx": 9.584426879882812e-05
+  },
+  "schema_version": 1,
+  "tolerances": {
+    "disabled_dx_abs": {
+      "abs": 1e-06,
+      "rel": 0.0
+    },
+    "enabled_dx": {
+      "abs": 1e-06,
+      "rel": 0.05
+    },
+    "enabled_minus_disabled_dx": {
+      "abs": 1e-06,
+      "rel": 0.05
+    }
+  }
+}
